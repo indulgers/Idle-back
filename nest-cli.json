@@ -10,13 +10,13 @@
   "monorepo": true,
   "root": "apps/micro-system",
   "projects": {
-    "micro-system": {
+    "main": {
       "type": "application",
-      "root": "apps/micro-system",
+      "root": "apps/main-server",
       "entryFile": "main",
-      "sourceRoot": "apps/micro-system/src",
+      "sourceRoot": "apps/main-server/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/micro-system/tsconfig.app.json"
+        "tsConfigPath": "apps/main-server/tsconfig.app.json"
       }
     },
     "user": {
@@ -35,6 +35,24 @@
       "sourceRoot": "apps/donate/src",
       "compilerOptions": {
         "tsConfigPath": "apps/donate/tsconfig.app.json"
+      }
+    },
+    "prisma": {
+      "type": "library",
+      "root": "libs/prisma",
+      "entryFile": "index",
+      "sourceRoot": "libs/prisma/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/prisma/tsconfig.lib.json"
+      }
+    },
+    "product": {
+      "type": "application",
+      "root": "apps/product",
+      "entryFile": "main",
+      "sourceRoot": "apps/product/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/product/tsconfig.app.json"
       }
     }
   }

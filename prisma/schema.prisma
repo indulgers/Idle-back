@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  username   String   @db.VarChar(50)
+  email      String   @db.VarChar(50)
+  roleId     String   @default("user") @db.VarChar(50)
+  role       Role     @relation(fields: [roleId], references: [id])
+  createTime DateTime @default(now())
+  updateTime DateTime @updatedAt
+}
+
+model Role {
+  id         String   @id @default(cuid())
+  name       String   @db.VarChar(50)
+  createTime DateTime @default(now())
+  updateTime DateTime @updatedAt
+  users      User[]
+}
+
+model Product {
+  id          String             @id @default(cuid())
+  name        String             @db.VarChar(50)
+  description String             @db.VarChar(255)
+  price       BigInt             @db.BigInt
+  userId      String             @db.VarChar(50)
+  status      VerificationStatus @default(PENDING)
+  createTime  DateTime           @default(now())
+  updateTime  DateTime           @updatedAt
+}
+
+model Donation {
+  id         String             @id @default(cuid())
+  name       String             @db.VarChar(50)
+  userId     String             @db.VarChar(50)
+  amount     Int                @db.Int
+  status     VerificationStatus @default(PENDING)
+  createTime DateTime           @default(now())
+  updateTime DateTime           @updatedAt
+}
+
+model Logistics {
+  id              String          @id @default(cuid())
+  name            String          @db.VarChar(50)
+  senderId        String          @db.VarChar(50)
+  receiverId      String          @db.VarChar(50)
+  transactionId   String          @db.VarChar(50)
+  senderAddress   String          @db.VarChar(255)
+  receiverAddress String          @db.VarChar(255)
+  trackingNumber  String          @db.VarChar(50)
+  status          LogisticsStatus @default(PENDING)
+  address         String          @db.VarChar(255)
+  createTime      DateTime        @default(now())
+  updateTime      DateTime        @updatedAt
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  userId     String   @db.VarChar(50)
+  productId  String   @db.VarChar(50)
+  content    String   @db.VarChar(255)
+  createTime DateTime @default(now())
+  updateTime DateTime @updatedAt
+}
+
+model Point {
+  id         String   @id @default(cuid())
+  userId     String   @db.VarChar(50)
+  amount     Int      @db.Int
+  createTime DateTime @default(now())
+  updateTime DateTime @updatedAt
+}
+
+model Order {
+  id         String   @id @default(cuid())
+  userId     String   @db.VarChar(50)
+  productId  String   @db.VarChar(50)
+  quantity   Int      @db.Int
+  createTime DateTime @default(now())
+  updateTime DateTime @updatedAt
+}
+
+enum LogisticsStatus {
+  PENDING
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  DELETED
+}
