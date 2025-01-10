@@ -4,8 +4,9 @@
 SERVER_USER="root"
 SERVER_HOST="116.205.163.50"
 SERVER_PORT=22
-PROJECT_DIR="/home/server"
+PROJECT_DIR="/root/server/Idle-back"
 REPO_URL="git@github.com:indulgers/Idle-back.git"
+REPO_NAME="Idle-back"
 BRANCH="main"
 NODE_ENV="production"
 PM2_APP_NAME="nestjs-app"
@@ -14,6 +15,17 @@ echo "开始部署 NestJS 微服务项目到服务器..."
 
 ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST << EOF
   echo "连接到服务器成功..."
+
+  # 安装 Node.js
+  if ! command -v node &> /dev/null; then
+    echo "安装 Node.js..."
+    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+    apt-get install -y nodejs
+  fi
+
+  # 设置 npm 镜像源
+  echo "设置 npm 镜像源..."
+  npm config set registry https://registry.npmmirror.com
 
   # 检查 pnpm 是否安装
   if ! command -v pnpm &> /dev/null; then
@@ -27,7 +39,6 @@ ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST << EOF
     mkdir -p $PROJECT_DIR
   fi
 
-  cd $PROJECT_DIR
 
   # Git 仓库操作
   if [ ! -d ".git" ]; then
@@ -42,13 +53,14 @@ ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST << EOF
   echo "切换到分支: $BRANCH"
   git checkout $BRANCH
 
+  cd  $PROJECT_DIR/apps/micro-system
   # 使用 pnpm 安装依赖
   echo "安装依赖..."
-  pnpm install --prod
+  pnpm install
 
   # 构建项目
   echo "构建项目..."
-  pnpm run build
+  pnpm run build user
 
   # PM2 操作
   if ! command -v pm2 &> /dev/null; then
@@ -57,7 +69,7 @@ ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST << EOF
   fi
 
   echo "启动/重启服务..."
-  pm2 start dist/main.js --name "$PM2_APP_NAME" --env $NODE_ENV || pm2 restart $PM2_APP_NAME
+  pm2 start dist/apps/user/main.js --name "$PM2_APP_NAME" --env $NODE_ENV || pm2 restart $PM2_APP_NAME
 
   pm2 save
 

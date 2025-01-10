@@ -51,13 +51,13 @@ export class UserController {
     return await this.userService.findUserList(page, limit);
   }
 
-  @Post('/register')
-  @ApiBody({
-    type: RegisterUserDto,
-    description: 'Register a new user',
-    required: true,
-  })
-  async register(@Body() registerUser: RegisterUserDto) {
-    return await this.userService.create(registerUser);
-  }
+  // @Post('/register')
+  // @ApiBody({
+  //   type: RegisterUserDto,
+  //   description: 'Register a new user',
+  //   required: true,
+  // })
+  // async register(@Body() registerUser: RegisterUserDto) {
+  //   return await this.userService.create(registerUser);
+  // }
 }

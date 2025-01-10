@@ -36,11 +36,11 @@ export class UserService {
     });
   }
 
-  async findUnique(where: Prisma.UserWhereUniqueInput) {
-    return await this.prisma.user.findUnique({
-      where,
-    });
-  }
+  // async findUnique(where: Prisma.UserWhereUniqueInput) {
+  //   return await this.prisma.user.findUnique({
+  //     where,
+  //   });
+  // }
 
   async login(data: LoginData) {
     const result = await axios.get(
@@ -49,19 +49,19 @@ export class UserService {
     console.log(result.data);
     return ResultData.ok(result.data);
   }
-  async create(data: Prisma.UserCreateInput) {
-    data.id = guid();
-    const user = await this.prisma.user.findUnique({
-      where: {
-        id: data.id,
-      },
-    });
-    if (user) {
-      throw new Error('User already exists');
-    }
+  // async create(data: Prisma.UserCreateInput) {
+  //   data.id = guid();
+  //   const user = await this.prisma.user.findUnique({
+  //     where: {
+  //       id: data.id,
+  //     },
+  //   });
+  //   if (user) {
+  //     throw new Error('User already exists');
+  //   }
 
-    return await this.prisma.user.create({
-      data,
-    });
-  }
+  //   return await this.prisma.user.create({
+  //     data,
+  //   });
+  // }
 }
