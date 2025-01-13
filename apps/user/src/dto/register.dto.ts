@@ -3,3 +3,8 @@ export class RegisterUserDto {
 
   email: string;
 }
+export interface CreateUserDto {
+  username: string;
+  email?: string;
+  roleId?: string;
+}

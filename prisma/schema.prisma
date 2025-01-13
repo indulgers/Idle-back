@@ -9,8 +9,9 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider     = "mysql"
+  relationMode = "prisma"
+  url          = env("DATABASE_URL")
 }
 
 model User {
@@ -21,6 +22,8 @@ model User {
   role       Role     @relation(fields: [roleId], references: [id])
   createTime DateTime @default(now())
   updateTime DateTime @updatedAt
+
+  @@index([roleId])
 }
 
 model Role {
