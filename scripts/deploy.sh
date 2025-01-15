@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # 部署配置
-SERVER_USER="root"
-SERVER_HOST="116.205.163.50"
+SERVER_USER="ubuntu"
+SERVER_HOST="106.53.179.23"
 SERVER_PORT=22
-PROJECT_DIR="/root/server/Idle-back"
+PROJECT_DIR="/home/ubuntu/server/Idle-back"
 REPO_URL="git@github.com:indulgers/Idle-back.git"
 REPO_NAME="Idle-back"
 BRANCH="main"
