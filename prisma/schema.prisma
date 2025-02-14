@@ -26,6 +26,14 @@ model User {
   @@index([roleId])
 }
 
+model Admin {
+  id         String   @id @default(cuid())
+  username   String   @db.VarChar(50)
+  password   String   @db.VarChar(255)
+  createTime DateTime @default(now())
+  updateTime DateTime @updatedAt
+}
+
 model Role {
   id         String   @id @default(cuid())
   name       String   @db.VarChar(50)
@@ -38,7 +46,7 @@ model Product {
   id          String             @id @default(cuid())
   name        String             @db.VarChar(50)
   description String             @db.VarChar(255)
-  price       BigInt             @db.BigInt
+  price       Int                @db.Int
   userId      String             @db.VarChar(50)
   status      VerificationStatus @default(PENDING)
   createTime  DateTime           @default(now())
@@ -94,6 +102,12 @@ model Order {
   quantity   Int      @db.Int
   createTime DateTime @default(now())
   updateTime DateTime @updatedAt
+}
+
+model Community {
+  id         String   @id @default(cuid())
+  name       String   @db.VarChar(50)
+  createTime DateTime @default(now())
 }
 
 enum LogisticsStatus {

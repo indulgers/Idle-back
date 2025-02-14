@@ -1,25 +1,31 @@
 import { PrismaService } from '@app/prisma';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { guid, ResultData } from '@app/common';
 import axios from 'axios';
-import { LoginData } from './types/user';
+import { LoginDto } from './dto/login.dto';
 import { MINIPROGRAM_CONFIG } from 'apps/common/config';
+import { JwtService } from '@nestjs/jwt';
 @Injectable()
 export class UserService {
-  getHello(): string {
-    return 'Hello World!';
-  }
-
   @Inject(PrismaService)
   private prisma: PrismaService;
+  @Inject(JwtService)
+  private jwtService: JwtService;
 
-  async findUserList(page: number = 0, limit: number = 10) {
+  async findUserList(query: { page: number; pageSize: number; name?: string }) {
+    const page = query.page || 1;
+    const pageSize = query.pageSize || 10;
+    const skip = (page - 1) * pageSize;
+    const where = query.name
+      ? { username: { contains: query.name, mode: 'insensitive' } }
+      : {};
     const [total, list] = await Promise.all([
       this.prisma.user.count(),
       this.prisma.user.findMany({
-        skip: page * limit,
-        take: limit,
+        where: where,
+        skip: skip,
+        take: Number(pageSize),
         orderBy: {
           createTime: 'desc',
         },
@@ -30,7 +36,7 @@ export class UserService {
       list,
       pagination: {
         current: page,
-        pageSize: limit,
+        pageSize: pageSize,
         total,
       },
     });
@@ -42,12 +48,24 @@ export class UserService {
     });
   }
 
-  async login(data: LoginData) {
-    const result = await axios.get(
-      `${MINIPROGRAM_CONFIG.WX_LOGIN_REQUEST_URL}?appid=${MINIPROGRAM_CONFIG.WX_APP_ID}&secret=${MINIPROGRAM_CONFIG.WX_APP_SECRET}&js_code=${data.code}&grant_type=authorization_code`,
-    );
-    console.log(result.data);
-    return ResultData.ok(result.data);
+  async login(where: LoginDto): Promise<ResultData> {
+    const user = await this.prisma.admin.findFirst({
+      where: {
+        username: where.username,
+      },
+    });
+    if (user.password !== where.password) {
+      throw new UnauthorizedException('密码错误');
+    }
+    const payload = {
+      id: user.id,
+      username: user.username,
+    };
+    const token = this.jwtService.sign(payload);
+    return ResultData.ok({
+      token,
+      user,
+    });
   }
   // async create(data: Prisma.UserCreateInput) {
   //   data.id = guid();
