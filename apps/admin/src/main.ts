@@ -6,6 +6,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 async function bootstrap() {
   const app = await NestFactory.create(AdminModule);
   app.enableCors();
+  app.setGlobalPrefix('api');
   const config = new DocumentBuilder()
     .setTitle('Admin management')
     .setDescription('The API for managing admins')
