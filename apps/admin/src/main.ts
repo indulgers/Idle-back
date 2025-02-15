@@ -18,7 +18,7 @@ async function bootstrap() {
     })
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('doc', app, documentFactory);
+  SwaggerModule.setup('api/admin/doc', app, documentFactory);
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   await app.listen(process.env.port ?? 3002);
 }
