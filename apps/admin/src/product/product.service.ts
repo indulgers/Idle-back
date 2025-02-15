@@ -14,13 +14,23 @@ export class ProductService {
     );
   }
 
-  async findAll(query: { page?: number; pageSize?: number; name?: string }) {
+  async findAll(query: {
+    page?: number;
+    pageSize?: number;
+    name?: string;
+    communityId?: string;
+  }) {
     const page = query.page || 1;
     const pageSize = query.pageSize || 10;
-    const skip = Number((page - 1) * pageSize);
-    const where = query.name
-      ? { name: { contains: query.name, mode: 'insensitive' } }
-      : {};
+    const skip = (page - 1) * pageSize;
+    const where: any = {};
+    if (query.name) {
+      where.name = { contains: query.name, mode: 'insensitive' };
+    }
+    // 如果传入 communityId，则添加该过滤条件
+    if (query.communityId) {
+      where.communityId = query.communityId;
+    }
     const data = await this.prisma.product.findMany({
       where,
       skip,
@@ -28,15 +38,9 @@ export class ProductService {
       orderBy: { createTime: 'desc' },
     });
     const total = await this.prisma.product.count({ where });
-    // const serializedData = serializeBigInts({ data, total, page, pageSize }); // Use the function
-
     return ResultData.ok({
       list: data,
-      pagination: {
-        current: page,
-        pageSize: pageSize,
-        total,
-      },
+      pagination: { current: page, pageSize, total },
     });
   }
 

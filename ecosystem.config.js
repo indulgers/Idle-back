@@ -12,5 +12,17 @@ module.exports = {
         PORT: 3001,
       },
     },
+    {
+      name: 'nest-admin',
+      script: 'dist/apps/admin/main.js',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '1G',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3002,
+      },
+    },
   ],
 };

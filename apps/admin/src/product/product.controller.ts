@@ -29,7 +29,7 @@ export class ProductController {
     return this.productService.create(createProductDto);
   }
 
-  @Get()
+  @Get('list')
   @ApiQuery({
     name: 'page',
   })
@@ -40,12 +40,17 @@ export class ProductController {
     name: 'name',
     required: false,
   })
+  @ApiQuery({
+    name: 'communityId',
+    required: false,
+  })
   findAll(
     @Query('page') page: number,
     @Query('pageSize') pageSize: number,
     @Query('name') name?: string,
+    @Query('communityId') communityId?: string,
   ) {
-    return this.productService.findAll({ page, pageSize, name });
+    return this.productService.findAll({ page, pageSize, name, communityId });
   }
 
   @Get(':id')

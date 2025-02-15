@@ -15,23 +15,34 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(cuid())
-  username   String   @db.VarChar(50)
-  email      String   @db.VarChar(50)
-  roleId     String   @default("user") @db.VarChar(50)
-  role       Role     @relation(fields: [roleId], references: [id])
-  createTime DateTime @default(now())
-  updateTime DateTime @updatedAt
+  id          String             @id @default(cuid())
+  username    String             @db.VarChar(50)
+  email       String             @db.VarChar(50)
+  roleId      String             @default("user") @db.VarChar(50)
+  role        Role               @relation(fields: [roleId], references: [id])
+  createTime  DateTime           @default(now())
+  updateTime  DateTime           @updatedAt
+  status      VerificationStatus @default(VERIFIED)
+  community   Community          @relation(fields: [communityId], references: [id])
+  communityId String
 
   @@index([roleId])
+  @@index([communityId])
 }
 
 model Admin {
-  id         String   @id @default(cuid())
-  username   String   @db.VarChar(50)
-  password   String   @db.VarChar(255)
-  createTime DateTime @default(now())
-  updateTime DateTime @updatedAt
+  id          String    @id @default(cuid())
+  username    String    @db.VarChar(50)
+  password    String    @db.VarChar(255)
+  roleId      String    @default("admin") @db.VarChar(50)
+  role        Role      @relation(fields: [roleId], references: [id])
+  createTime  DateTime  @default(now())
+  updateTime  DateTime  @updatedAt
+  communityId String
+  Community   Community @relation(fields: [communityId], references: [id])
+
+  @@index([communityId])
+  @@index([roleId])
 }
 
 model Role {
@@ -40,6 +51,7 @@ model Role {
   createTime DateTime @default(now())
   updateTime DateTime @updatedAt
   users      User[]
+  Admin      Admin[]
 }
 
 model Product {
@@ -51,16 +63,24 @@ model Product {
   status      VerificationStatus @default(PENDING)
   createTime  DateTime           @default(now())
   updateTime  DateTime           @updatedAt
+  communityId String
+
+  @@index([communityId])
+  @@index([userId])
 }
 
 model Donation {
-  id         String             @id @default(cuid())
-  name       String             @db.VarChar(50)
-  userId     String             @db.VarChar(50)
-  amount     Int                @db.Int
-  status     VerificationStatus @default(PENDING)
-  createTime DateTime           @default(now())
-  updateTime DateTime           @updatedAt
+  id          String             @id @default(cuid())
+  name        String             @db.VarChar(50)
+  userId      String             @db.VarChar(50)
+  amount      Int                @db.Int
+  status      VerificationStatus @default(PENDING)
+  createTime  DateTime           @default(now())
+  updateTime  DateTime           @updatedAt
+  communityId String
+
+  @@index([userId])
+  @@index([communityId])
 }
 
 model Logistics {
@@ -108,6 +128,9 @@ model Community {
   id         String   @id @default(cuid())
   name       String   @db.VarChar(50)
   createTime DateTime @default(now())
+
+  User  User[]
+  Admin Admin[]
 }
 
 enum LogisticsStatus {

@@ -3,7 +3,6 @@ import { UserService } from './user.service';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { ApiBody, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { LoginData } from '../../../../libs/types/user';
 import { LoginDto } from './dto/login.dto';
 @Controller('user')
 @ApiTags('user')
@@ -35,13 +34,13 @@ export class UserController {
   @Get('/list')
   @ApiQuery({
     name: 'page',
-    required: true,
-    type: Number,
   })
   @ApiQuery({
-    name: 'limit',
+    name: 'pageSize',
+  })
+  @ApiQuery({
+    name: 'name',
     required: false,
-    type: Number,
   })
   @ApiResponse({
     status: 200,
