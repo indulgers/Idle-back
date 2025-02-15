@@ -12,7 +12,7 @@ declare module 'express' {
     };
   }
 }
-@Controller('admin')
+@Controller('')
 @UseGuards(RolesGuard)
 export class AdminController {
   // 示例：查询社区数据，要求社区管理员或者超级管理员
@@ -38,7 +38,7 @@ export class AdminController {
 
   // 示例：超级管理员接口，管理所有社区的数据
   @Get('all')
-  @Roles('super_admin')
+  // @Roles('super_admin')
   async getAllCommunityData() {
     // 仅超级管理员才能访问
     return { data: '所有社区的数据' };
