@@ -55,15 +55,18 @@ model Role {
 }
 
 model Product {
-  id          String             @id @default(cuid())
-  name        String             @db.VarChar(50)
-  description String             @db.VarChar(255)
-  price       Int                @db.Int
-  userId      String             @db.VarChar(50)
-  status      VerificationStatus @default(PENDING)
-  createTime  DateTime           @default(now())
-  updateTime  DateTime           @updatedAt
-  communityId String
+  id            String                      @id @default(cuid())
+  name          String                      @db.VarChar(50)
+  description   String                      @db.VarChar(255)
+  price         Int                         @db.Int
+  embedding     Unsupported("VECTOR(384)")? // 根据使用的向量维度调整
+  userId        String                      @db.VarChar(50)
+  status        VerificationStatus          @default(PENDING)
+  createTime    DateTime                    @default(now())
+  updateTime    DateTime                    @default(now()) @updatedAt
+  communityId   String
+  viewCount     Int                         @default(0)
+  purchaseCount Int                         @default(0)
 
   @@index([communityId])
   @@index([userId])
@@ -81,6 +84,33 @@ model Donation {
 
   @@index([userId])
   @@index([communityId])
+}
+
+model UserBehavior {
+  id        String       @id @default(cuid())
+  userId    String
+  productId String
+  type      BehaviorType // VIEW, PURCHASE, CART_ADD, etc
+  weight    Float        @default(1.0)
+  createdAt DateTime     @default(now())
+
+  @@unique([userId, productId, type])
+  @@index([userId, type])
+  @@index([productId, type])
+}
+
+model Recommendation {
+  id        String             @id @default(cuid())
+  userId    String
+  productId String
+  score     Float
+  type      RecommendationType
+  createdAt DateTime           @default(now())
+  expiredAt DateTime
+
+  @@index([userId])
+  @@index([productId])
+  @@index([type])
 }
 
 model Logistics {
@@ -145,4 +175,18 @@ enum VerificationStatus {
   VERIFIED
   REJECTED
   DELETED
+}
+
+enum RecommendationType {
+  CONTENT_BASED
+  COLLABORATIVE
+  HYBRID
+  TRENDING
+}
+
+enum BehaviorType {
+  VIEW
+  PURCHASE
+  CART_ADD
+  SEARCH_CLICK
 }
