@@ -55,18 +55,17 @@ model Role {
 }
 
 model Product {
-  id            String                      @id @default(cuid())
-  name          String                      @db.VarChar(50)
-  description   String                      @db.VarChar(255)
-  price         Int                         @db.Int
-  embedding     Unsupported("VECTOR(384)")? // 根据使用的向量维度调整
-  userId        String                      @db.VarChar(50)
-  status        VerificationStatus          @default(PENDING)
-  createTime    DateTime                    @default(now())
-  updateTime    DateTime                    @default(now()) @updatedAt
+  id            String             @id @default(cuid())
+  name          String             @db.VarChar(50)
+  description   String             @db.VarChar(255)
+  price         Int                @db.Int
+  userId        String             @db.VarChar(50)
+  status        VerificationStatus @default(PENDING)
+  createTime    DateTime           @default(now())
+  updateTime    DateTime           @default(now()) @updatedAt
   communityId   String
-  viewCount     Int                         @default(0)
-  purchaseCount Int                         @default(0)
+  viewCount     Int                @default(0)
+  purchaseCount Int                @default(0)
 
   @@index([communityId])
   @@index([userId])
