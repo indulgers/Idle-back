@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Query,
-  Delete,
-  Param,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Delete } from '@nestjs/common';
 import { RecommendationsService } from './recommend.service';
 import { IndexProductDto } from './dto/index-product.dto';
 

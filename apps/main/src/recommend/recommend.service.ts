@@ -53,24 +53,34 @@ export class RecommendationsService {
       nResults: 10,
       where: filters,
     });
-    console.log('res', results);
-    console.log('results:', results.ids[0]);
-    const productIds = results.ids[0];
-    console.log(
-      'productIds:',
-      await this.prisma.product.findFirst({
-        where: {
-          id: productIds[0], // 使用正确的查询条件格式
-        },
+
+    // 将 ID 和距离组合成对象数组，便于排序
+    const productsWithDistances = results.ids[0].map(
+      (id: string, index: number) => ({
+        id,
+        distance: results.distances[0][index],
       }),
     );
-    return ResultData.ok(
-      await this.prisma.product.findFirst({
-        where: {
-          id: productIds[0], // 使用正确的查询条件格式
+
+    // 按距离升序排序（距离越小越相似）
+    productsWithDistances.sort((a, b) => a.distance - b.distance);
+
+    // 获取排序后的 ID 数组
+    const sortedProductIds = productsWithDistances.map((p) => p.id);
+    // 使用 Prisma 查询，并保持排序顺序
+    const products = await this.prisma.product.findMany({
+      where: {
+        id: {
+          in: sortedProductIds,
         },
-      }),
-    );
+      },
+    });
+
+    // 根据 sortedProductIds 的顺序重新排序查询结果
+    const sortedProducts = sortedProductIds
+      .map((id) => products.find((p) => p.id === id))
+      .filter(Boolean);
+    return ResultData.ok(sortedProducts);
   }
   async deleteProduct(productIds: string[], filters = {}) {
     await this.collection.delete({
