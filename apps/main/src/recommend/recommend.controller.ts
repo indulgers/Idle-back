@@ -18,7 +18,7 @@ export class RecommendController {
 
   @Get('similar')
   @ApiQuery({ name: 'query', required: true })
-  @ApiQuery({ name: 'filters', required: false })
+  @ApiQuery({ name: 'filters', required: false, type: Object })
   @ApiResponse({ status: 200, description: 'Similar products retrieved' })
   async recommendSimilar(
     @Query('query') query: string,

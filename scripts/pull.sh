@@ -35,7 +35,8 @@ print_message "正在执行 Prisma 迁移..."
 npx prisma db push
 # 4. 构建项目
 print_message "正在构建项目..."
-pnpm run build
+pnpm run build main --if-present
+pnpm run build admin --if-present
 
 # 5. 重启 PM2 服务
 print_message "正在重启服务..."
