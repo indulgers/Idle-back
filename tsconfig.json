@@ -37,6 +37,12 @@
       ],
       "@app/chroma/*": [
         "libs/chroma/src/*"
+      ],
+      "@app/minio": [
+        "libs/minio/src",
+      ],
+      "@app/minio/*": [
+        "libs/minio/src/*"
       ]
     }
   },

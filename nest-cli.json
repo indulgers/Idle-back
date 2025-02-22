@@ -54,6 +54,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/chroma/tsconfig.lib.json"
       }
+    },
+    "minio": {
+      "type": "library",
+      "root": "libs/minio",
+      "entryFile": "index",
+      "sourceRoot": "libs/minio/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/minio/tsconfig.lib.json"
+      }
     }
   }
 }
