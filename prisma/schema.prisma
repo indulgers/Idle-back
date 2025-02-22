@@ -16,6 +16,9 @@ datasource db {
 
 model User {
   id          String             @id @default(cuid())
+  openid      String?            @unique // 微信小程序用户唯一标识
+  avatar      String?            @db.VarChar(255) // 用户头像 URL
+  nickname    String?            @db.VarChar(50) // 用户昵称
   username    String             @db.VarChar(50)
   email       String             @db.VarChar(50)
   roleId      String             @default("user") @db.VarChar(50)

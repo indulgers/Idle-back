@@ -7,6 +7,9 @@ import { MinioModule } from '@app/minio';
 import { PrismaModule, PrismaService } from '@app/prisma';
 import { ChromaModule, ChromaService } from '@app/chroma';
 import { MinioController } from '@app/minio/minio.controller';
+import { UserModule } from './user/user.module';
+import { JwtModule } from '@nestjs/jwt';
+import { jwtConstants } from '@app/common/enums/constant';
 @Module({
   imports: [
     EmbeddingModule,
@@ -14,6 +17,12 @@ import { MinioController } from '@app/minio/minio.controller';
     PrismaModule,
     ChromaModule,
     MinioModule,
+    UserModule,
+    JwtModule.register({
+      signOptions: { expiresIn: '30d' },
+      global: true,
+      secret: jwtConstants.secret,
+    }),
   ],
   controllers: [MainController, MinioController],
   providers: [MainService, PrismaService, ChromaService],
