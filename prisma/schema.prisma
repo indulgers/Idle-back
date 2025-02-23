@@ -21,7 +21,7 @@ model User {
   nickname    String?            @db.VarChar(50) // 用户昵称
   username    String             @db.VarChar(50)
   email       String             @db.VarChar(50)
-  phone       String             @db.VarChar(50)
+  phone       String             @default("") @db.VarChar(50)
   roleId      String             @default("user") @db.VarChar(50)
   role        Role               @relation(fields: [roleId], references: [id])
   createTime  DateTime           @default(now())

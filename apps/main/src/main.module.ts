@@ -6,6 +6,7 @@ import { RecommendModule } from './recommend/recommend.module';
 import { MinioModule } from '@app/minio';
 import { PrismaModule, PrismaService } from '@app/prisma';
 import { ChromaModule, ChromaService } from '@app/chroma';
+import { CacheModule } from '@app/cache';
 import { MinioController } from '@app/minio/minio.controller';
 import { UserModule } from './user/user.module';
 import { JwtModule } from '@nestjs/jwt';
@@ -18,6 +19,7 @@ import { jwtConstants } from '@app/common/enums/constant';
     ChromaModule,
     MinioModule,
     UserModule,
+    CacheModule,
     JwtModule.register({
       signOptions: { expiresIn: '30d' },
       global: true,

@@ -39,10 +39,16 @@
         "libs/chroma/src/*"
       ],
       "@app/minio": [
-        "libs/minio/src",
+        "libs/minio/src"
       ],
       "@app/minio/*": [
         "libs/minio/src/*"
+      ],
+      "@app/cache": [
+        "libs/cache/src"
+      ],
+      "@app/cache/*": [
+        "libs/cache/src/*"
       ]
     }
   },
