@@ -11,6 +11,8 @@ import { MinioController } from '@app/minio/minio.controller';
 import { UserModule } from './user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from '@app/common/enums/constant';
+import { ChatModule } from './chat/chat.module';
+
 @Module({
   imports: [
     EmbeddingModule,
@@ -20,6 +22,7 @@ import { jwtConstants } from '@app/common/enums/constant';
     MinioModule,
     UserModule,
     CacheModule,
+    ChatModule,
     JwtModule.register({
       signOptions: { expiresIn: '30d' },
       global: true,

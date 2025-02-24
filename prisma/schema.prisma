@@ -157,6 +157,26 @@ model Order {
   updateTime DateTime @updatedAt
 }
 
+model Chat {
+  id         String    @id @default(cuid())
+  sellerId   String // 商家ID
+  buyerId    String // 买家ID
+  createTime DateTime  @default(now())
+  updateTime DateTime  @updatedAt
+  messages   Message[]
+}
+
+model Message {
+  id         String      @id @default(cuid())
+  senderId   String      @db.VarChar(50)
+  Chat       Chat?       @relation(fields: [chatId], references: [id])
+  type       MessageType @default(TEXT)
+  read       Boolean     @default(false)
+  chatId     String?
+  createTime DateTime    @default(now())
+  content    String      @db.Text
+}
+
 model Community {
   id         String   @id @default(cuid())
   name       String   @db.VarChar(50)
@@ -192,4 +212,10 @@ enum BehaviorType {
   PURCHASE
   CART_ADD
   SEARCH_CLICK
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  PRODUCT
 }

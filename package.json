@@ -54,6 +54,7 @@
     "pathe": "^2.0.3",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
+    "socket.io": "^4.8.1",
     "uuid": "^11.0.3",
     "winston": "^3.17.0"
   },
