@@ -70,6 +70,8 @@ model Product {
   communityId   String
   viewCount     Int                @default(0)
   purchaseCount Int                @default(0)
+  imageUrl      String             @default("") @db.VarChar(255)
+  comments      Comment[]
 
   @@index([communityId])
   @@index([userId])
@@ -131,6 +133,17 @@ model Logistics {
   updateTime      DateTime        @updatedAt
 }
 
+model Post {
+  id         String    @id @default(cuid())
+  userId     String    @db.VarChar(50)
+  title      String    @db.VarChar(50)
+  content    String    @db.VarChar(255)
+  images     String    @db.Text
+  createTime DateTime  @default(now())
+  updateTime DateTime  @updatedAt
+  comments   Comment[]
+}
+
 model Review {
   id         String   @id @default(cuid())
   userId     String   @db.VarChar(50)
@@ -164,6 +177,24 @@ model Chat {
   createTime DateTime  @default(now())
   updateTime DateTime  @updatedAt
   messages   Message[]
+}
+
+model Comment {
+  id         String   @id @default(cuid())
+  content    String   @db.Text
+  userId     String   @db.VarChar(50)
+  createTime DateTime @default(now())
+  updateTime DateTime @updatedAt
+
+  // 关联字段
+  product   Product? @relation(fields: [productId], references: [id])
+  productId String?
+  post      Post?    @relation(fields: [postId], references: [id])
+  postId    String?
+
+  @@index([productId])
+  @@index([postId])
+  @@index([userId])
 }
 
 model Message {

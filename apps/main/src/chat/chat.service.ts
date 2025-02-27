@@ -101,7 +101,7 @@ export class ChatService {
 
     const messages = await this.prisma.message.findMany({
       where: { chatId: roomId },
-      orderBy: { createTime: 'desc' },
+      orderBy: { createTime: 'asc' },
     });
     console.log('messages', messages);
     // 标记消息为已读

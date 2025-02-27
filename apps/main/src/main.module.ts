@@ -12,14 +12,20 @@ import { UserModule } from './user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from '@app/common/enums/constant';
 import { ChatModule } from './chat/chat.module';
+import { PostModule } from './post/post.module';
+import { CommentModule } from './comment/comment.module';
+import { ProductModule } from './product/product.module';
 
 @Module({
   imports: [
     EmbeddingModule,
     RecommendModule,
     PrismaModule,
+    PostModule,
     ChromaModule,
     MinioModule,
+    CommentModule,
+    ProductModule,
     UserModule,
     CacheModule,
     ChatModule,
@@ -28,6 +34,9 @@ import { ChatModule } from './chat/chat.module';
       global: true,
       secret: jwtConstants.secret,
     }),
+    PostModule,
+    CommentModule,
+    ProductModule,
   ],
   controllers: [MainController, MinioController],
   providers: [MainService, PrismaService, ChromaService],
