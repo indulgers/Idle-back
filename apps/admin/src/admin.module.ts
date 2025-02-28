@@ -22,6 +22,7 @@ import { DonateModule } from './donation/donate.module';
     UserModule,
     ProductModule,
     DonateModule,
+    OrderModule,
     JwtModule.register({
       global: true,
       secret: jwtConstants.secret,

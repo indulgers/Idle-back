@@ -22,6 +22,7 @@ start_time=$(date +%s)
 
 # 1. 拉取最新代码
 print_message "正在拉取最新代码..."
+git stash
 git pull
 
 # 2. 安装依赖
@@ -35,12 +36,12 @@ print_message "正在执行 Prisma 迁移..."
 npx prisma db push
 # 4. 构建项目
 print_message "正在构建项目..."
-pnpm run build main --if-present
-pnpm run build admin --if-present
+pnpm run build main 
+pnpm run build admin
 
 # 5. 重启 PM2 服务
 print_message "正在重启服务..."
-pm2 reload all
+pm2 restart all
 
 # 计算执行时间
 end_time=$(date +%s)

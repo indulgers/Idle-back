@@ -6,39 +6,52 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { QueryOrderDto } from './dto/query-order.dto';
 
 @Controller('order')
 @ApiTags('order')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
-  @Post()
-  create(@Body() createOrderDto: CreateOrderDto) {
-    return this.orderService.create(createOrderDto);
-  }
+  // @Post()
+  // @ApiOperation({ summary: '创建订单(管理员不可用)' })
+  // create(@Body() createOrderDto: CreateOrderDto) {
+  //   return this.orderService.create(createOrderDto);
+  // }
 
   @Get()
-  findAll() {
-    return this.orderService.findAll();
+  @ApiOperation({ summary: '查询订单列表' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    required: false,
+  })
+  findAll(@Query() query: QueryOrderDto) {
+    return this.orderService.findAll(query);
   }
 
   @Get(':id')
+  @ApiOperation({ summary: '查询订单详情' })
   findOne(@Param('id') id: string) {
-    return this.orderService.findOne(+id);
+    return this.orderService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
-    return this.orderService.update(+id, updateOrderDto);
-  }
+  // @Patch(':id')
+  // @ApiOperation({ summary: '更新订单状态' })
+  // update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
+  //   return this.orderService.update(id, updateOrderDto);
+  // }
 
   @Delete(':id')
+  @ApiOperation({ summary: '删除订单' })
   remove(@Param('id') id: string) {
-    return this.orderService.remove(+id);
+    return this.orderService.remove(id);
   }
 }

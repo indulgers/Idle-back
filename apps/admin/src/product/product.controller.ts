@@ -3,10 +3,10 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   Query,
+  Put,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { ApiBody, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -58,7 +58,7 @@ export class ProductController {
     return this.productService.findOne(id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   @ApiBody({
     type: CreateProductDto,
   })

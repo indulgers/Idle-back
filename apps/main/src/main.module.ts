@@ -15,6 +15,7 @@ import { ChatModule } from './chat/chat.module';
 import { PostModule } from './post/post.module';
 import { CommentModule } from './comment/comment.module';
 import { ProductModule } from './product/product.module';
+import { OrderModule } from './order/order.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { ProductModule } from './product/product.module';
     PostModule,
     CommentModule,
     ProductModule,
+    OrderModule,
   ],
   controllers: [MainController, MinioController],
   providers: [MainService, PrismaService, ChromaService],
