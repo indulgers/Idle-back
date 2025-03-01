@@ -29,6 +29,7 @@ model User {
   status      VerificationStatus @default(VERIFIED)
   community   Community          @relation(fields: [communityId], references: [id])
   communityId String
+  Order       Order[]
 
   @@index([roleId])
   @@index([communityId])
@@ -72,6 +73,7 @@ model Product {
   purchaseCount Int                @default(0)
   imageUrl      String             @default("") @db.VarChar(255)
   comments      Comment[]
+  Order         Order[]
 
   @@index([communityId])
   @@index([userId])
@@ -162,12 +164,19 @@ model Point {
 }
 
 model Order {
-  id         String   @id @default(cuid())
-  userId     String   @db.VarChar(50)
-  productId  String   @db.VarChar(50)
-  quantity   Int      @db.Int
-  createTime DateTime @default(now())
-  updateTime DateTime @updatedAt
+  id         String      @id @default(cuid())
+  userId     String      @db.VarChar(50)
+  user       User        @relation(fields: [userId], references: [id])
+  productId  String      @db.VarChar(50)
+  product    Product     @relation(fields: [productId], references: [id])
+  quantity   Int         @db.Int
+  status     OrderStatus @default(PENDING) // 新增状态字段
+  totalPrice Int         @db.Int // 新增总价字段
+  createTime DateTime    @default(now())
+  updateTime DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([productId])
 }
 
 model Chat {
@@ -249,4 +258,13 @@ enum MessageType {
   TEXT
   IMAGE
   PRODUCT
+}
+
+enum OrderStatus {
+  PENDING // 待处理
+  PAID // 已支付
+  SHIPPING // 配送中
+  COMPLETED // 已完成
+  CANCELLED // 已取消
+  DELETED // 已删除
 }

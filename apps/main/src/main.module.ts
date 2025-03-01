@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { MainController } from './main.controller';
 import { MainService } from './main.service';
 import { EmbeddingModule } from './embedding/embedding.module';
-import { RecommendModule } from './recommend/recommend.module';
 import { MinioModule } from '@app/minio';
 import { PrismaModule, PrismaService } from '@app/prisma';
 import { ChromaModule, ChromaService } from '@app/chroma';
@@ -16,11 +15,12 @@ import { PostModule } from './post/post.module';
 import { CommentModule } from './comment/comment.module';
 import { ProductModule } from './product/product.module';
 import { OrderModule } from './order/order.module';
+import { BehaviorModule } from './behavior/behavior.module';
+import { RecommendationModule } from './recommendation/recommendation.module';
 
 @Module({
   imports: [
     EmbeddingModule,
-    RecommendModule,
     PrismaModule,
     PostModule,
     ChromaModule,
@@ -30,6 +30,8 @@ import { OrderModule } from './order/order.module';
     UserModule,
     CacheModule,
     ChatModule,
+    BehaviorModule,
+    RecommendationModule,
     JwtModule.register({
       signOptions: { expiresIn: '30d' },
       global: true,
