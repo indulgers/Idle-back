@@ -1,5 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsEnum,
+} from 'class-validator';
+// 导入 Prisma 生成的枚举
+import { VerificationStatus } from '@prisma/client';
+
+export enum SortOrder {
+  ASC = 'asc',
+  DESC = 'desc',
+}
 
 export class CreateProductDto {
   @ApiProperty({ description: '物品名称' })
@@ -48,17 +61,61 @@ export class UpdateProductDto {
 export class QueryProductDto {
   @ApiProperty({ description: '页码', required: false })
   @IsOptional()
+  @IsNumber()
   page?: number;
 
   @ApiProperty({ description: '每页数量', required: false })
   @IsOptional()
+  @IsNumber()
   pageSize?: number;
 
   @ApiProperty({ description: '社区ID', required: false })
   @IsOptional()
+  @IsString()
   communityId?: string;
 
-  @ApiProperty({ description: '状态', required: false })
+  @ApiProperty({
+    description: '状态',
+    required: false,
+    enum: VerificationStatus,
+    enumName: 'VerificationStatus',
+  })
   @IsOptional()
-  status?: 'PENDING' | 'VERIFIED' | 'REJECTED' | 'DELETED';
+  @IsEnum(VerificationStatus)
+  status?: VerificationStatus;
+
+  @ApiProperty({ description: '关键词', required: false })
+  @IsOptional()
+  @IsString()
+  keyword?: string;
+
+  @ApiProperty({ description: '排序字段', required: false })
+  @IsOptional()
+  @IsString()
+  sortBy?: string;
+
+  @ApiProperty({ description: '排序方向', required: false, enum: SortOrder })
+  @IsOptional()
+  @IsEnum(SortOrder)
+  sortOrder?: SortOrder;
+
+  @ApiProperty({ description: '最低价格(分)', required: false })
+  @IsOptional()
+  @IsNumber()
+  minPrice?: number;
+
+  @ApiProperty({ description: '最高价格(分)', required: false })
+  @IsOptional()
+  @IsNumber()
+  maxPrice?: number;
+
+  @ApiProperty({ description: '商品成色', required: false })
+  @IsOptional()
+  @IsString()
+  condition?: string;
+
+  @ApiProperty({ description: '分类ID', required: false })
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
 }
