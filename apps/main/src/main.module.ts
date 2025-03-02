@@ -17,7 +17,7 @@ import { ProductModule } from './product/product.module';
 import { OrderModule } from './order/order.module';
 import { BehaviorModule } from './behavior/behavior.module';
 import { RecommendationModule } from './recommendation/recommendation.module';
-
+import { DonationModule } from './donate/donation.module';
 @Module({
   imports: [
     EmbeddingModule,
@@ -31,6 +31,7 @@ import { RecommendationModule } from './recommendation/recommendation.module';
     CacheModule,
     ChatModule,
     BehaviorModule,
+    DonationModule,
     RecommendationModule,
     JwtModule.register({
       signOptions: { expiresIn: '30d' },

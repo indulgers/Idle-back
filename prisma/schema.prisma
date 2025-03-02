@@ -14,22 +14,25 @@ datasource db {
   url          = env("DATABASE_URL")
 }
 
+// 修复 User 模型中的重复关系
 model User {
-  id          String             @id @default(cuid())
-  openid      String?            @unique // 微信小程序用户唯一标识
-  avatar      String?            @db.VarChar(255) // 用户头像 URL
-  nickname    String?            @db.VarChar(50) // 用户昵称
-  username    String             @db.VarChar(50)
-  email       String             @db.VarChar(50)
-  phone       String             @default("") @db.VarChar(50)
-  roleId      String             @default("user") @db.VarChar(50)
-  role        Role               @relation(fields: [roleId], references: [id])
-  createTime  DateTime           @default(now())
-  updateTime  DateTime           @updatedAt
-  status      VerificationStatus @default(VERIFIED)
-  community   Community          @relation(fields: [communityId], references: [id])
-  communityId String
-  Order       Order[]
+  id               String             @id @default(cuid())
+  openid           String?            @unique
+  avatar           String?            @db.VarChar(255)
+  nickname         String?            @db.VarChar(50)
+  username         String             @db.VarChar(50)
+  email            String             @db.VarChar(50)
+  phone            String             @default("") @db.VarChar(50)
+  roleId           String             @default("user") @db.VarChar(50)
+  role             Role               @relation(fields: [roleId], references: [id])
+  createTime       DateTime           @default(now())
+  updateTime       DateTime           @updatedAt
+  status           VerificationStatus @default(VERIFIED)
+  community        Community          @relation(fields: [communityId], references: [id])
+  communityId      String
+  Order            Order[]
+  donations        Donation[] // 用户发布的捐赠物品
+  claimedDonations Donation[]         @relation("ClaimedDonations") // 用户领取的捐赠物品
 
   @@index([roleId])
   @@index([communityId])
@@ -79,18 +82,44 @@ model Product {
   @@index([userId])
 }
 
+model Category {
+  id          String     @id @default(cuid())
+  name        String     @db.VarChar(50)
+  description String?    @db.VarChar(255)
+  Donation    Donation[]
+}
+
+// 修复 Donation 模型与 User 的关系
 model Donation {
-  id          String             @id @default(cuid())
-  name        String             @db.VarChar(50)
-  userId      String             @db.VarChar(50)
-  amount      Int                @db.Int
-  status      VerificationStatus @default(PENDING)
-  createTime  DateTime           @default(now())
-  updateTime  DateTime           @updatedAt
+  id          String            @id @default(uuid())
+  name        String
+  description String?
+  categoryId  String
+  category    Category          @relation(fields: [categoryId], references: [id])
+  condition   String
+  images      String
+  status      DonationStatus    @default(PENDING)
+  userId      String
+  user        User              @relation(fields: [userId], references: [id])
   communityId String
+  community   Community         @relation(fields: [communityId], references: [id])
+  pointValue  Int               @default(50)
+  createTime  DateTime          @default(now())
+  updateTime  DateTime          @updatedAt
+  claimId     String?
+  claimer     User?             @relation("ClaimedDonations", fields: [claimId], references: [id])
+  claimTime   DateTime?
+  verifyTime  DateTime?
+  verifyNote  String?
+  feedback    DonationFeedback?
+  eventId     String?
+  event       DonationEvent?    @relation(fields: [eventId], references: [id])
 
   @@index([userId])
   @@index([communityId])
+  @@index([categoryId])
+  @@index([claimId])
+  @@index([eventId])
 }
 
 model UserBehavior {
@@ -222,8 +251,37 @@ model Community {
   name       String   @db.VarChar(50)
   createTime DateTime @default(now())
 
-  User  User[]
-  Admin Admin[]
+  User          User[]
+  Admin         Admin[]
+  Donation      Donation[]
+  DonationEvent DonationEvent[]
+}
+
+model DonationFeedback {
+  id         String   @id @default(uuid())
+  donationId String   @unique // 关联到捐赠物品
+  donation   Donation @relation(fields: [donationId], references: [id])
+  rating     Int // 评分(1-5)
+  comment    String? // 评价内容
+  images     String   @db.Text // 存储为JSON字符串或逗号分隔的URL
+  createTime DateTime @default(now())
+  updateTime DateTime @updatedAt
+}
+
+// 捐赠活动
+model DonationEvent {
+  id          String      @id @default(uuid())
+  name        String // 活动名称
+  description String // 活动描述
+  startTime   DateTime // 开始时间
+  endTime     DateTime // 结束时间
+  location    String // 活动地点
+  communityId String // 社区ID
+  community   Community   @relation(fields: [communityId], references: [id])
+  status      EventStatus @default(UPCOMING)
+  donations   Donation[] // 关联的捐赠物品
+  createTime  DateTime    @default(now())
+  updateTime  DateTime    @updatedAt
 }
 
 enum LogisticsStatus {
@@ -267,4 +325,20 @@ enum OrderStatus {
   COMPLETED // 已完成
   CANCELLED // 已取消
   DELETED // 已删除
+}
+
+enum DonationStatus {
+  PENDING // 待审核
+  APPROVED // 已审核，待领取
+  CLAIMED // 已被领取
+  COMPLETED // 已完成（已评价）
+  REJECTED // 被拒绝
+  CANCELED // 已取消
+}
+
+enum EventStatus {
+  UPCOMING // 即将开始
+  ONGOING // 进行中
+  FINISHED // 已结束
+  CANCELED // 已取消
 }

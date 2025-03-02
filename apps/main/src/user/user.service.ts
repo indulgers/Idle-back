@@ -40,24 +40,26 @@ export class UserService implements OnModuleInit {
 
   // 发送短信验证码
   async sendSmsCode(phone: string) {
-    console.log('phone', phone);
     try {
       // 生成验证码
       const code = this.generateCode();
-      console.log('code', code);
-      // 调用短信服务发送验证码
-      const response = {} as any;
 
-      // if (response.data.code !== 200) {
-      //   throw new Error('短信发送失败');
-      // }
-      console.log('验证码：', code);
-      // 使用 cache-manager 存储验证码
-      await this.cache.set(`sms:${phone}`, code, 300); // 5分钟过期
-      console.log(await this.cache.get(`sms:${phone}`));
+      // 构造缓存键
+      const cacheKey = `sms:${phone}`;
+
+      // 存储验证码到Redis
+      await this.cache.set(cacheKey, code, 300000); // 5分钟过期
+
+      // 立即验证是否存储成功
+      const verifiedCode = await this.cache.get(cacheKey);
+
+      if (!verifiedCode) {
+        console.error('警告: 验证码写入缓存失败!');
+      }
 
       return ResultData.ok(code, '验证码发送成功');
     } catch (error) {
+      console.error('发送验证码错误:', error);
       throw new HttpException(
         '验证码发送失败',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -70,7 +72,6 @@ export class UserService implements OnModuleInit {
     try {
       // 从缓存获取验证码
       const savedCode = await this.cache.get<string>(`sms:${phone}`);
-
       if (!savedCode || savedCode !== code) {
         throw new HttpException('验证码错误', HttpStatus.BAD_REQUEST);
       }
