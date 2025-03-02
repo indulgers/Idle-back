@@ -19,7 +19,7 @@ export class ProductService {
   ) {}
 
   // 新增关键词搜索方法
-  async search(keyword: string, userId: string | null, query: QueryProductDto) {
+  async search(keyword: string, query: QueryProductDto) {
     const {
       page = 1,
       pageSize = 10,
@@ -123,9 +123,9 @@ export class ProductService {
       });
 
       // 如果有登录用户，记录搜索行为
-      if (userId) {
+      if (query.userId) {
         this.behaviorService
-          .recordSearchBehavior(userId, keyword)
+          .recordSearchBehavior(query.userId, keyword)
           .catch((error) => {
             console.error('记录搜索行为失败:', error);
           });

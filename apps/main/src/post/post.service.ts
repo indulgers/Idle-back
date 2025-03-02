@@ -131,7 +131,7 @@ export class PostService {
       this.prisma.post.findMany({
         where: { userId },
         skip: (page - 1) * pageSize,
-        take: pageSize,
+        take: Number(pageSize),
         orderBy: {
           createTime: 'desc',
         },

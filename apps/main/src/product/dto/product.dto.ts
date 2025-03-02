@@ -118,4 +118,9 @@ export class QueryProductDto {
   @IsOptional()
   @IsString()
   categoryId?: string;
+
+  @ApiProperty({ description: '用户ID', required: false })
+  @IsOptional()
+  @IsString()
+  userId?: string;
 }

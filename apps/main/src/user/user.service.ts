@@ -4,6 +4,7 @@ import {
   HttpStatus,
   Inject,
   OnModuleInit,
+  NotFoundException,
 } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
@@ -180,6 +181,129 @@ export class UserService implements OnModuleInit {
         error.message || '登录失败',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
+    }
+  }
+
+  // 获取用户资料
+  async getUserProfile(userId: string) {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+          community: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          role: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+
+      if (!user) {
+        throw new NotFoundException('用户不存在');
+      }
+
+      // 统计用户捐赠和领取的物品数量
+      const [donationsCount, claimedCount] = await Promise.all([
+        this.prisma.donation.count({
+          where: {
+            userId: userId,
+          },
+        }),
+        this.prisma.donation.count({
+          where: {
+            claimId: userId,
+          },
+        }),
+      ]);
+
+      // 计算用户的积分总和
+      const pointsAggregate = await this.prisma.point.aggregate({
+        where: { userId: userId },
+        _sum: { amount: true },
+      });
+
+      const totalPoints = pointsAggregate._sum?.amount || 0;
+
+      // 过滤敏感信息，返回安全的用户资料
+      const userProfile = {
+        id: user.id,
+        nickname: user.nickname,
+        username: user.username,
+        avatar: user.avatar,
+        email: user.email,
+        phone: user.phone,
+        status: user.status,
+        createTime: user.createTime,
+        community: user.community,
+        role: user.role,
+        points: totalPoints,
+        stats: {
+          donationsCount,
+          claimedCount,
+        },
+      };
+
+      return ResultData.ok(userProfile);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+      }
+      throw new HttpException(
+        '获取用户资料失败',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  // 搜索用户
+  async searchUsers(params: { keyword?: string; communityId?: string }) {
+    try {
+      const { keyword, communityId } = params;
+
+      // 构建查询条件
+      const where: any = {};
+
+      if (keyword) {
+        where.OR = [
+          { nickname: { contains: keyword } },
+          { username: { contains: keyword } },
+          { phone: { contains: keyword } },
+          { email: { contains: keyword } },
+        ];
+      }
+
+      if (communityId) {
+        where.communityId = communityId;
+      }
+
+      const users = await this.prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          nickname: true,
+          username: true,
+          avatar: true,
+          communityId: true,
+          community: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        take: 20, // 限制返回数量
+      });
+
+      return ResultData.ok(users);
+    } catch (error) {
+      throw new HttpException('搜索用户失败', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }
