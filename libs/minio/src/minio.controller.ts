@@ -1,14 +1,36 @@
-import { Controller, Get, Query, Inject } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
-import { MINIO_CLIENT } from './minio.module';
+import {
+  Controller,
+  Get,
+  Post,
+  Query,
+  Inject,
+  UploadedFile,
+  UploadedFiles,
+  UseInterceptors,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiQuery,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { MINIO_CLIENT } from './minio.constants';
+import { MinioService } from './minio.service';
 import * as Minio from 'minio';
 import { ResultData } from '@app/common';
 
 @Controller('minio')
 @ApiTags('minio')
 export class MinioController {
-  @Inject(MINIO_CLIENT)
-  private minioClient: Minio.Client;
+  constructor(
+    private readonly minioService: MinioService,
+    @Inject(MINIO_CLIENT) private readonly minioClient: Minio.Client,
+  ) {}
 
   @Get('presigned')
   @ApiOperation({ summary: '获取预签名上传URL' })
@@ -33,7 +55,7 @@ export class MinioController {
 
       return ResultData.ok(url, '获取上传链接成功');
     } catch (error) {
-      return ResultData.error('获取上传链接失败', error.message);
+      return ResultData.fail(500, '获取上传链接失败: ' + error.message);
     }
   }
 
@@ -52,7 +74,82 @@ export class MinioController {
 
       return ResultData.ok(url, '获取访问链接成功');
     } catch (error) {
-      return ResultData.error('获取访问链接失败', error.message);
+      return ResultData.fail(500, '获取访问链接失败: ' + error.message);
+    }
+  }
+
+  @Post('upload')
+  @ApiOperation({ summary: '单文件上传' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFile(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
+          new FileTypeValidator({
+            fileType: '.(png|jpeg|jpg|gif|pdf|doc|docx|xls|xlsx|txt)',
+          }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    try {
+      const url = await this.minioService.uploadFile(file);
+      return ResultData.ok({ url }, '文件上传成功');
+    } catch (error) {
+      return ResultData.fail(500, '文件上传失败: ' + error.message);
+    }
+  }
+
+  @Post('upload/multiple')
+  @ApiOperation({ summary: '多文件上传' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        files: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+        },
+      },
+    },
+  })
+  @UseInterceptors(FilesInterceptor('files', 10)) // 最多上传10个文件
+  async uploadMultipleFiles(
+    @UploadedFiles(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
+          new FileTypeValidator({
+            fileType: '.(png|jpeg|jpg|gif|pdf|doc|docx|xls|xlsx|txt)',
+          }),
+        ],
+      }),
+    )
+    files: Express.Multer.File[],
+  ) {
+    try {
+      const urls = await this.minioService.uploadFiles(files);
+      return ResultData.ok({ urls }, '文件上传成功');
+    } catch (error) {
+      return ResultData.fail(500, '文件上传失败: ' + error.message);
     }
   }
 }

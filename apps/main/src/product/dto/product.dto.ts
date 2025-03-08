@@ -39,6 +39,21 @@ export class CreateProductDto {
   @IsString()
   @IsNotEmpty()
   communityId: string;
+
+  @ApiProperty({ description: '分类ID' })
+  @IsString()
+  @IsNotEmpty()
+  categoryId: string;
+
+  @ApiProperty({ description: 'url' })
+  @IsString()
+  @IsNotEmpty()
+  imageUrl: string;
+
+  @ApiProperty({ description: '标签' })
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  tags: string;
 }
 
 export class UpdateProductDto {

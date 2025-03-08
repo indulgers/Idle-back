@@ -12,6 +12,7 @@ import { DonateService } from './donate.service';
 import { ApiBody, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateCommunityDto } from '../community/dto/create-community.dto';
 import { UpdateDonationDto } from './dto/update-donation.dto';
+import { ResultData } from '@app/common';
 @Controller('donation')
 @ApiTags('donation')
 export class DonateController {
@@ -45,12 +46,17 @@ export class DonateController {
     description: 'The found records',
   })
   findAll(@Query('page') page: number, @Query('pageSize') pageSize: number) {
-    return this.donateService.findAll({ page, pageSize });
+    return ResultData.ok(
+      this.donateService.findAll({
+        page: Number(page),
+        pageSize: Number(pageSize),
+      }),
+    );
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.donateService.findOne(id);
+    return ResultData.ok(this.donateService.findOne(id));
   }
 
   @Patch(':id')

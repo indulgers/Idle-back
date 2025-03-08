@@ -151,28 +151,31 @@ export class ProductService {
 
   // 修改 create 方法来添加向量索引
   async create(data: CreateProductDto) {
-    try {
-      const product = await this.prisma.product.create({
-        data: {
-          id: guid(),
-          ...data,
-          viewCount: 0,
-          purchaseCount: 0,
-          status: 'PENDING',
-        },
-      });
+    const product = await this.prisma.product.create({
+      data: {
+        id: guid(),
+        name: data.name,
+        description: data.description,
+        price: data.price,
+        userId: data.userId,
+        communityId: data.communityId,
+        categoryId: data.categoryId,
+        imageUrl: data.imageUrl,
+        tags: data.tags,
+        viewCount: 0,
+        purchaseCount: 0,
+        status: 'PENDING',
+      },
+    });
+    console.log('创建物品:', product);
+    // 生成并存储向量嵌入
+    const content = `${product.name} ${product.description}`;
+    await this.productVectorService.addOrUpdateProductEmbedding(
+      product.id,
+      content,
+    );
 
-      // 生成并存储向量嵌入
-      const content = `${product.name} ${product.description}`;
-      await this.productVectorService.addOrUpdateProductEmbedding(
-        product.id,
-        content,
-      );
-
-      return ResultData.ok(product);
-    } catch (error) {
-      throw new HttpException('创建物品失败', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    return ResultData.ok(product);
   }
 
   // 修改 update 方法来更新向量索引

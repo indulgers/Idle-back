@@ -66,7 +66,9 @@ model Product {
   id            String             @id @default(cuid())
   name          String             @db.VarChar(50)
   description   String             @db.VarChar(255)
+  categoryId    String             @db.VarChar(50)
   price         Int                @db.Int
+  tags          String?            @db.VarChar(255)
   userId        String             @db.VarChar(50)
   status        VerificationStatus @default(PENDING)
   createTime    DateTime           @default(now())
@@ -74,7 +76,7 @@ model Product {
   communityId   String
   viewCount     Int                @default(0)
   purchaseCount Int                @default(0)
-  imageUrl      String             @default("") @db.VarChar(255)
+  imageUrl      String             @db.Text
   comments      Comment[]
   Order         Order[]
 

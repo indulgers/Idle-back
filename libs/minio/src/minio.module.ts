@@ -1,11 +1,12 @@
 import { Global, Module } from '@nestjs/common';
 import * as Minio from 'minio';
-
-export const MINIO_CLIENT = 'MINIO_CLIENT';
-
+import { MinioController } from './minio.controller';
+import { MINIO_CLIENT } from './minio.constants';
+import { MinioService } from './minio.service';
 @Global()
 @Module({
   providers: [
+    MinioService,
     {
       provide: MINIO_CLIENT,
       async useFactory() {
@@ -20,6 +21,7 @@ export const MINIO_CLIENT = 'MINIO_CLIENT';
       },
     },
   ],
-  exports: [MINIO_CLIENT],
+  controllers: [MinioController],
+  exports: [MINIO_CLIENT, MinioService],
 })
 export class MinioModule {}
