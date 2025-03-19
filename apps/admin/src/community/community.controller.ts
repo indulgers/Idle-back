@@ -18,11 +18,12 @@ import {
   ApiQuery,
   ApiResponse,
   ApiTags,
+  ApiOperation,
+  ApiParam,
 } from '@nestjs/swagger';
 import { LoginGuard } from 'apps/common/guards/auth.guard';
 
 @Controller('community')
-@UseGuards(LoginGuard)
 @ApiTags('community')
 export class CommunityController {
   constructor(private readonly communityService: CommunityService) {}
@@ -50,7 +51,6 @@ export class CommunityController {
     name: 'name',
     required: false,
   })
-  @ApiBearerAuth()
   @ApiResponse({
     status: 200,
     description: 'The found records',
@@ -63,10 +63,10 @@ export class CommunityController {
     return this.communityService.findAll({ page, pageSize, name });
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.communityService.findOne(id);
-  }
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.communityService.findOne(id);
+  // }
 
   @Patch(':id')
   update(
@@ -79,5 +79,67 @@ export class CommunityController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.communityService.remove(id);
+  }
+
+  @Get('tree')
+  @ApiOperation({ summary: '获取社区层级树结构' })
+  @ApiResponse({
+    status: 200,
+    description: '返回完整的社区层级结构树',
+  })
+  getCommunityTree() {
+    return this.communityService.getCommunityTree();
+  }
+
+  @Get('by-level/:level')
+  @ApiOperation({ summary: '获取指定级别的社区列表' })
+  @ApiParam({
+    name: 'level',
+    description: '社区级别 (1-市，2-区，3-街道，4-社区)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '返回指定级别的社区列表',
+  })
+  getCommunityByLevel(@Param('level') level: string) {
+    return this.communityService.getCommunityByLevel(Number(level));
+  }
+
+  @Get('under-district/:districtId')
+  @ApiOperation({ summary: '获取指定区下辖的街道和社区' })
+  @ApiParam({
+    name: 'districtId',
+    description: '区级行政单位ID',
+    required: true,
+  })
+  @ApiQuery({
+    name: 'includeStreets',
+    description: '是否包含街道数据，默认为true',
+    required: false,
+    type: Boolean,
+  })
+  @ApiQuery({
+    name: 'includeCommunities',
+    description: '是否包含社区数据，默认为true',
+    required: false,
+    type: Boolean,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '返回该区下辖的街道和社区数据',
+  })
+  getDistrictSubordinates(
+    @Param('districtId') districtId: string,
+    @Query('includeStreets') includeStreets?: string,
+    @Query('includeCommunities') includeCommunities?: string,
+  ) {
+    const shouldIncludeStreets = includeStreets !== 'false';
+    const shouldIncludeCommunities = includeCommunities !== 'false';
+
+    return this.communityService.getDistrictSubordinates(
+      districtId,
+      shouldIncludeStreets,
+      shouldIncludeCommunities,
+    );
   }
 }

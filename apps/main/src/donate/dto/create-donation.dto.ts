@@ -20,11 +20,11 @@ export class CreateDonationDto {
   @ApiProperty({ description: '物品成色', example: '9成新' })
   @IsNotEmpty({ message: '物品成色不能为空' })
   @IsString()
-  condition: string;
+  condition?: string;
 
   @ApiProperty({
     description: '物品图片URLs (逗号分隔)',
-    example: 'url1,url2,url3',
+    example: "['http://img1', 'http://img2']",
   })
   @IsNotEmpty({ message: '物品图片不能为空' })
   @IsString()

@@ -3,10 +3,19 @@ import { NestFactory } from '@nestjs/core';
 import { AdminModule } from './admin.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+
+// 添加全局BigInt序列化处理
+(BigInt.prototype as any).toJSON = function () {
+  return Number(this);
+};
+
 async function bootstrap() {
   const app = await NestFactory.create(AdminModule);
+
   app.enableCors();
+
   app.setGlobalPrefix('api/admin');
+
   const config = new DocumentBuilder()
     .setTitle('Admin management')
     .setDescription('The API for managing admins')

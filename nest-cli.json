@@ -72,6 +72,24 @@
       "compilerOptions": {
         "tsConfigPath": "libs/cache/tsconfig.lib.json"
       }
+    },
+    "gateway": {
+      "type": "application",
+      "root": "apps/gateway",
+      "entryFile": "main",
+      "sourceRoot": "apps/gateway/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/gateway/tsconfig.app.json"
+      }
+    },
+    "content": {
+      "type": "application",
+      "root": "apps/content",
+      "entryFile": "main",
+      "sourceRoot": "apps/content/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/content/tsconfig.app.json"
+      }
     }
   }
 }

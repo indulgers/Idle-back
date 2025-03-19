@@ -58,16 +58,16 @@ export class DonationController {
     return this.donationService.update(id, updateDonationDto);
   }
 
-  // @Put(':id/verify')
-  // @ApiOperation({ summary: '审核捐赠' })
-  // @ApiParam({ name: 'id', description: '捐赠ID' })
-  // verify(
-  //   @Param('id') id: string,
-  //   @Body('status') status: DonationStatus,
-  //   @Body('verifyNote') verifyNote: string,
-  // ) {
-  //   return this.donationService.verify(id, adminId, status, verifyNote);
-  // }
+  @Put(':id/verify')
+  @ApiOperation({ summary: '审核捐赠' })
+  @ApiParam({ name: 'id', description: '捐赠ID' })
+  verify(
+    @Param('id') id: string,
+    @Body('status') status: DonationStatus,
+    @Body('verifyNote') verifyNote: string,
+  ) {
+    return this.donationService.verify(id, status, verifyNote);
+  }
 
   @Post('claim')
   @ApiOperation({ summary: '领取捐赠' })

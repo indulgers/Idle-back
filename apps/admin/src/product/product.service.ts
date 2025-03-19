@@ -40,7 +40,9 @@ export class ProductService {
     const total = await this.prisma.product.count({ where });
     return ResultData.ok({
       list: data,
-      pagination: { current: page, pageSize, total },
+      total,
+      page,
+      pageSize,
     });
   }
 

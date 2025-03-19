@@ -1,20 +1,13 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider     = "mysql"
-  relationMode = "prisma"
   url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
-// 修复 User 模型中的重复关系
 model User {
   id               String             @id @default(cuid())
   openid           String?            @unique
@@ -24,15 +17,15 @@ model User {
   email            String             @db.VarChar(50)
   phone            String             @default("") @db.VarChar(50)
   roleId           String             @default("user") @db.VarChar(50)
-  role             Role               @relation(fields: [roleId], references: [id])
   createTime       DateTime           @default(now())
   updateTime       DateTime           @updatedAt
   status           VerificationStatus @default(VERIFIED)
-  community        Community          @relation(fields: [communityId], references: [id])
   communityId      String
+  role             Role               @relation(fields: [roleId], references: [id])
+  community        Community          @relation(fields: [communityId], references: [id])
   Order            Order[]
-  donations        Donation[] // 用户发布的捐赠物品
-  claimedDonations Donation[]         @relation("ClaimedDonations") // 用户领取的捐赠物品
+  donations        Donation[]
+  claimedDonations Donation[]         @relation("ClaimedDonations")
 
   @@index([roleId])
   @@index([communityId])
@@ -43,10 +36,11 @@ model Admin {
   username    String    @db.VarChar(50)
   password    String    @db.VarChar(255)
   roleId      String    @default("admin") @db.VarChar(50)
-  role        Role      @relation(fields: [roleId], references: [id])
   createTime  DateTime  @default(now())
   updateTime  DateTime  @updatedAt
   communityId String
+  phone       String    @default("") @db.VarChar(50)
+  role        Role      @relation(fields: [roleId], references: [id])
   Community   Community @relation(fields: [communityId], references: [id])
 
   @@index([communityId])
@@ -66,9 +60,7 @@ model Product {
   id            String             @id @default(cuid())
   name          String             @db.VarChar(50)
   description   String             @db.VarChar(255)
-  categoryId    String             @db.VarChar(50)
-  price         Int                @db.Int
-  tags          String?            @db.VarChar(255)
+  price         Int
   userId        String             @db.VarChar(50)
   status        VerificationStatus @default(PENDING)
   createTime    DateTime           @default(now())
@@ -77,6 +69,8 @@ model Product {
   viewCount     Int                @default(0)
   purchaseCount Int                @default(0)
   imageUrl      String             @db.Text
+  categoryId    String             @db.VarChar(50)
+  tags          String?            @db.VarChar(255)
   comments      Comment[]
   Order         Order[]
 
@@ -91,30 +85,29 @@ model Category {
   Donation    Donation[]
 }
 
-// 修复 Donation 模型与 User 的关系
 model Donation {
   id          String            @id @default(uuid())
   name        String
-  description String?
-  categoryId  String
-  category    Category          @relation(fields: [categoryId], references: [id])
-  condition   String
-  images      String
-  status      DonationStatus    @default(PENDING)
   userId      String
-  user        User              @relation(fields: [userId], references: [id])
-  communityId String
-  community   Community         @relation(fields: [communityId], references: [id])
-  pointValue  Int               @default(50)
+  status      DonationStatus    @default(PENDING)
   createTime  DateTime          @default(now())
   updateTime  DateTime          @updatedAt
+  communityId String
+  categoryId  String
   claimId     String?
-  claimer     User?             @relation("ClaimedDonations", fields: [claimId], references: [id])
   claimTime   DateTime?
-  verifyTime  DateTime?
-  verifyNote  String?
-  feedback    DonationFeedback?
+  condition   String?
+  description String?
   eventId     String?
+  images      String            @db.Text
+  pointValue  Int               @default(50)
+  verifyNote  String?
+  verifyTime  DateTime?
+  category    Category          @relation(fields: [categoryId], references: [id])
+  user        User              @relation(fields: [userId], references: [id])
+  community   Community         @relation(fields: [communityId], references: [id])
+  claimer     User?             @relation("ClaimedDonations", fields: [claimId], references: [id])
+  feedback    DonationFeedback?
   event       DonationEvent?    @relation(fields: [eventId], references: [id])
 
   @@index([userId])
@@ -128,8 +121,8 @@ model UserBehavior {
   id        String       @id @default(cuid())
   userId    String
   productId String
-  type      BehaviorType // VIEW, PURCHASE, CART_ADD, etc
-  weight    Float        @default(1.0)
+  type      BehaviorType
+  weight    Float        @default(1)
   createdAt DateTime     @default(now())
 
   @@unique([userId, productId, type])
@@ -167,14 +160,62 @@ model Logistics {
 }
 
 model Post {
-  id         String    @id @default(cuid())
-  userId     String    @db.VarChar(50)
-  title      String    @db.VarChar(50)
-  content    String    @db.VarChar(255)
-  images     String    @db.Text
-  createTime DateTime  @default(now())
-  updateTime DateTime  @updatedAt
-  comments   Comment[]
+  id            String         @id @default(cuid())
+  userId        String         @db.VarChar(50)
+  title         String         @db.VarChar(50)
+  content       String         @db.VarChar(255)
+  images        String         @db.Text
+  createTime    DateTime       @default(now())
+  updateTime    DateTime       @updatedAt
+  favoriteCount Int            @default(0)
+  likeCount     Int            @default(0)
+  topic         String         @default("未分类") @db.VarChar(50)
+  viewCount     Int            @default(0)
+  comments      Comment[]
+  likes         PostLike[]
+  favorites     PostFavorite[]
+  views         PostView[]
+
+  @@index([userId])
+}
+
+model PostLike {
+  id         String   @id @default(cuid())
+  postId     String
+  userId     String
+  createTime DateTime @default(now())
+  post       Post     @relation(fields: [postId], references: [id])
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
+model PostFavorite {
+  id         String   @id @default(cuid())
+  postId     String
+  userId     String
+  createTime DateTime @default(now())
+  post       Post     @relation(fields: [postId], references: [id])
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
+model PostView {
+  id         String   @id @default(cuid())
+  postId     String
+  userId     String?
+  deviceId   String?
+  ip         String?
+  userAgent  String?  @db.Text
+  createTime DateTime @default(now())
+  post       Post     @relation(fields: [postId], references: [id])
+
+  @@index([postId])
+  @@index([userId])
+  @@index([deviceId])
 }
 
 model Review {
@@ -189,7 +230,7 @@ model Review {
 model Point {
   id         String   @id @default(cuid())
   userId     String   @db.VarChar(50)
-  amount     Int      @db.Int
+  amount     Int
   createTime DateTime @default(now())
   updateTime DateTime @updatedAt
 }
@@ -197,14 +238,14 @@ model Point {
 model Order {
   id         String      @id @default(cuid())
   userId     String      @db.VarChar(50)
-  user       User        @relation(fields: [userId], references: [id])
   productId  String      @db.VarChar(50)
-  product    Product     @relation(fields: [productId], references: [id])
-  quantity   Int         @db.Int
-  status     OrderStatus @default(PENDING) // 新增状态字段
-  totalPrice Int         @db.Int // 新增总价字段
+  quantity   Int
   createTime DateTime    @default(now())
   updateTime DateTime    @updatedAt
+  status     OrderStatus @default(PENDING)
+  totalPrice Int
+  user       User        @relation(fields: [userId], references: [id])
+  product    Product     @relation(fields: [productId], references: [id])
 
   @@index([userId])
   @@index([productId])
@@ -212,8 +253,8 @@ model Order {
 
 model Chat {
   id         String    @id @default(cuid())
-  sellerId   String // 商家ID
-  buyerId    String // 买家ID
+  sellerId   String
+  buyerId    String
   createTime DateTime  @default(now())
   updateTime DateTime  @updatedAt
   messages   Message[]
@@ -225,12 +266,10 @@ model Comment {
   userId     String   @db.VarChar(50)
   createTime DateTime @default(now())
   updateTime DateTime @updatedAt
-
-  // 关联字段
-  product   Product? @relation(fields: [productId], references: [id])
-  productId String?
-  post      Post?    @relation(fields: [postId], references: [id])
-  postId    String?
+  productId  String?
+  postId     String?
+  product    Product? @relation(fields: [productId], references: [id])
+  post       Post?    @relation(fields: [postId], references: [id])
 
   @@index([productId])
   @@index([postId])
@@ -240,50 +279,62 @@ model Comment {
 model Message {
   id         String      @id @default(cuid())
   senderId   String      @db.VarChar(50)
-  Chat       Chat?       @relation(fields: [chatId], references: [id])
   type       MessageType @default(TEXT)
   read       Boolean     @default(false)
   chatId     String?
   createTime DateTime    @default(now())
   content    String      @db.Text
+  Chat       Chat?       @relation(fields: [chatId], references: [id])
 }
 
 model Community {
-  id         String   @id @default(cuid())
-  name       String   @db.VarChar(50)
-  createTime DateTime @default(now())
-
+  id            String          @id @default(cuid())
+  name          String          @db.VarChar(50)
+  createTime    DateTime        @default(now())
+  address       String?         @db.VarChar(255)
+  code          String?         @db.VarChar(20)
+  contact       String?         @db.VarChar(50)
+  description   String?         @db.Text
+  level         Int             @default(4)
+  parentId      String?
+  parentName    String?         @db.VarChar(50)
+  status        Boolean         @default(true)
+  type          CommunityType   @default(COMMUNITY)
+  updateTime    DateTime        @default(now()) @updatedAt
   User          User[]
   Admin         Admin[]
   Donation      Donation[]
   DonationEvent DonationEvent[]
+
+  @@index([parentId])
+  @@index([type])
+  @@index([code])
 }
 
 model DonationFeedback {
   id         String   @id @default(uuid())
-  donationId String   @unique // 关联到捐赠物品
-  donation   Donation @relation(fields: [donationId], references: [id])
-  rating     Int // 评分(1-5)
-  comment    String? // 评价内容
-  images     String   @db.Text // 存储为JSON字符串或逗号分隔的URL
+  donationId String   @unique
+  rating     Int
+  comment    String?
+  images     String   @db.Text
   createTime DateTime @default(now())
-  updateTime DateTime @updatedAt
+  updateTime DateTime @default(now()) @updatedAt
+  donation   Donation @relation(fields: [donationId], references: [id])
 }
 
-// 捐赠活动
 model DonationEvent {
   id          String      @id @default(uuid())
-  name        String // 活动名称
-  description String // 活动描述
-  startTime   DateTime // 开始时间
-  endTime     DateTime // 结束时间
-  location    String // 活动地点
-  communityId String // 社区ID
-  community   Community   @relation(fields: [communityId], references: [id])
+  name        String
+  description String
+  startTime   DateTime
+  endTime     DateTime
+  location    String
+  communityId String
   status      EventStatus @default(UPCOMING)
-  donations   Donation[] // 关联的捐赠物品
   createTime  DateTime    @default(now())
   updateTime  DateTime    @updatedAt
+  community   Community   @relation(fields: [communityId], references: [id])
+  donations   Donation[]
 }
 
 enum LogisticsStatus {
@@ -321,26 +372,33 @@ enum MessageType {
 }
 
 enum OrderStatus {
-  PENDING // 待处理
-  PAID // 已支付
-  SHIPPING // 配送中
-  COMPLETED // 已完成
-  CANCELLED // 已取消
-  DELETED // 已删除
+  PENDING
+  PAID
+  SHIPPING
+  COMPLETED
+  CANCELLED
+  DELETED
 }
 
 enum DonationStatus {
-  PENDING // 待审核
-  APPROVED // 已审核，待领取
-  CLAIMED // 已被领取
-  COMPLETED // 已完成（已评价）
-  REJECTED // 被拒绝
-  CANCELED // 已取消
+  PENDING
+  APPROVED
+  CLAIMED
+  COMPLETED
+  REJECTED
+  CANCELED
 }
 
 enum EventStatus {
-  UPCOMING // 即将开始
-  ONGOING // 进行中
-  FINISHED // 已结束
-  CANCELED // 已取消
+  UPCOMING
+  ONGOING
+  FINISHED
+  CANCELED
+}
+
+enum CommunityType {
+  CITY
+  DISTRICT
+  STREET
+  COMMUNITY
 }

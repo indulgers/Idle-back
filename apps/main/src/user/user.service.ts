@@ -110,6 +110,7 @@ export class UserService implements OnModuleInit {
             phone: user.phone,
             nickname: user.nickname,
             avatar: user.avatar,
+            communityId: user.communityId,
           },
         },
         '登录成功',
@@ -169,6 +170,7 @@ export class UserService implements OnModuleInit {
           },
         });
       }
+      console.log('user', user);
 
       // 生成 JWT token
       const token = this.jwtService.sign({

@@ -74,7 +74,7 @@ export class ProductService {
       // 语义向量搜索 - 使用 chromadb 向量搜索
       const semanticProductIds =
         await this.productVectorService.searchSimilarProducts(keyword, 20);
-
+      console.log('语义搜索结果:', semanticProductIds);
       // 执行数据库查询
       const [basicTotal, basicItems] = await Promise.all([
         this.prisma.product.count({ where: baseWhere }),
@@ -106,11 +106,11 @@ export class ProductService {
           },
         });
       }
-
+      console.log('语义匹配结果:', semanticItems);
       // 合并搜索结果，去重
       const combinedItems = [...basicItems];
       const basicItemIds = new Set(basicItems.map((item) => item.id));
-
+      console.log('基本搜索结果:', basicItems);
       for (const item of semanticItems) {
         if (!basicItemIds.has(item.id)) {
           combinedItems.push(item);
@@ -263,13 +263,13 @@ export class ProductService {
   }
 
   async findAll(query: QueryProductDto) {
-    const { page = 1, pageSize = 10, communityId, status } = query;
+    const { page = 1, pageSize = 10, communityId, status, categoryId } = query;
 
     const where: Prisma.ProductWhereInput = {
       ...(status ? { status } : { status: { not: 'DELETED' } }), // 使用正确的枚举值
       ...(communityId && { communityId }),
+      ...(categoryId && { categoryId }),
     };
-
     const [total, items] = await Promise.all([
       this.prisma.product.count({ where }),
       this.prisma.product.findMany({
@@ -281,7 +281,6 @@ export class ProductService {
         },
       }),
     ]);
-
     return ResultData.ok({
       items,
       total,

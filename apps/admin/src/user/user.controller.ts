@@ -2,8 +2,16 @@ import { Body, Controller, Get, Inject, Post, Query } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { ApiBody, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { LoginDto } from './dto/login.dto';
+import { RegisterAdminDto } from './dto/register-admin.dto';
+
 @Controller('user')
 @ApiTags('user')
 export class UserController {
@@ -64,4 +72,15 @@ export class UserController {
   // async register(@Body() registerUser: RegisterUserDto) {
   //   return await this.userService.create(registerUser);
   // }
+
+  @Post('/register-admin')
+  @ApiOperation({ summary: '注册管理员' })
+  @ApiBody({ type: RegisterAdminDto })
+  @ApiResponse({
+    status: 201,
+    description: '管理员注册成功',
+  })
+  async registerAdmin(@Body() registerAdminDto: RegisterAdminDto) {
+    return this.userService.registerAdmin(registerAdminDto);
+  }
 }

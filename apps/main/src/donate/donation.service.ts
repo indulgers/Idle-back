@@ -15,20 +15,14 @@ export class DonationService {
   // 创建捐赠
   async create(createDonationDto: CreateDonationDto) {
     try {
-      // 验证分类是否存在
-      const category = await this.prisma.category.findUnique({
-        where: { id: createDonationDto.categoryId },
-      });
-
-      if (!category) {
-        throw new HttpException('分类不存在', HttpStatus.BAD_REQUEST);
-      }
-
       // 创建捐赠记录
       const donation = await this.prisma.donation.create({
         data: {
           id: guid(),
           ...createDonationDto,
+          images: Array.isArray(createDonationDto.images)
+            ? JSON.stringify(createDonationDto.images)
+            : createDonationDto.images,
           status: DonationStatus.PENDING,
           pointValue: createDonationDto.pointValue || 50, // 默认50积分
         },
@@ -198,12 +192,7 @@ export class DonationService {
   }
 
   // 审核捐赠
-  async verify(
-    id: string,
-    adminId: string,
-    status: DonationStatus,
-    verifyNote?: string,
-  ) {
+  async verify(id: string, status: DonationStatus, verifyNote?: string) {
     try {
       const donation = await this.prisma.donation.findUnique({
         where: { id },

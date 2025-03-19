@@ -1,22 +1,24 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { Module } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { RolesGuard } from '../../common/guards/roles.guard';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { PrismaModule, PrismaService } from '@app/prisma';
 import { JwtModule } from '@nestjs/jwt';
 import * as winston from 'winston';
 import { utilities, WinstonModule } from 'nest-winston';
-import { FakeAuthMiddleware } from '../../common/middleware/auth.middleware';
 import { CommunityModule } from './community/community.module';
 import { jwtConstants } from '@app/common/enums/constant';
 import { UserModule } from './user/user.module';
 import { OrderModule } from './order/order.module';
 import { ProductModule } from './product/product.module';
 import { DonateModule } from './donation/donate.module';
+import { ConfigModule } from '@nestjs/config';
+import { HttpModule } from '@nestjs/axios';
+import { AnalyticsModule } from './analytics/analytics.module';
+
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     PrismaModule,
     CommunityModule,
     UserModule,
@@ -44,22 +46,10 @@ import { DonateModule } from './donation/donate.module';
         ],
       }),
     }),
-
-    OrderModule,
+    HttpModule,
+    AnalyticsModule,
   ],
   controllers: [AdminController],
-  providers: [
-    AdminService,
-    Reflector,
-    PrismaService,
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
-  ],
+  providers: [AdminService, Reflector, PrismaService],
 })
-export class AdminModule {
-  // configure(consumer: MiddlewareConsumer) {
-  //   consumer.apply(FakeAuthMiddleware).forRoutes('*');
-  // }
-}
+export class AdminModule {}
