@@ -1,0 +1,160 @@
+version: '3.8'
+
+services:
+  # 网关服务
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: micro-system-gateway
+    container_name: micro-gateway
+    command: node dist/apps/gateway/main.js
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+      - CHROMA_DB_URL=http://chroma:8000
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - redis
+      - chroma
+    networks:
+      - micro_net
+
+  # 主服务
+  main:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: micro-system-main
+    container_name: micro-main
+    command: node dist/apps/main/main.js
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - REDIS_URL=redis://redis:6379
+      - CHROMA_DB_URL=http://chroma:8000
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - redis
+      - chroma
+    networks:
+      - micro_net
+
+  # 内容服务
+  content:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: micro-system-content
+    container_name: micro-content
+    command: node dist/apps/content/main.js
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=3004
+      - REDIS_URL=redis://redis:6379
+      - CHROMA_DB_URL=http://chroma:8000
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - redis
+      - chroma
+      - minio
+    networks:
+      - micro_net
+
+  # 管理员服务
+  admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: micro-system-admin
+    container_name: micro-admin
+    command: node dist/apps/admin/main.js
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - REDIS_URL=redis://redis:6379
+      - CHROMA_DB_URL=http://chroma:8000
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - redis
+      - chroma
+    networks:
+      - micro_net
+
+  # Redis 缓存服务
+  redis:
+    image: redis:alpine
+    container_name: micro-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - micro_net
+
+  # MinIO 对象存储
+  minio:
+    image: minio/minio:latest
+    container_name: micro-minio
+    environment:
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - micro_net
+
+  # ChromaDB 向量数据库
+  chroma:
+    image: chromadb/chroma:latest
+    container_name: micro-chroma
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    networks:
+      - micro_net
+
+  # ETCD 服务发现（用于Nacos替代）
+  etcd:
+    image: bitnami/etcd:latest
+    container_name: micro-etcd
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=yes
+    ports:
+      - "2379:2379"
+    volumes:
+      - etcd_data:/bitnami/etcd
+    networks:
+      - micro_net
+
+volumes:
+  redis_data:
+  minio_data:
+  chroma_data:
+  etcd_data:
+
+networks:
+  micro_net:
+    driver: bridge 

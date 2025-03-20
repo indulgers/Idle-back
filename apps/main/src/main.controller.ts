@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Inject,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Inject } from '@nestjs/common';
 import { MainService } from './main.service';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ClientProxy } from '@nestjs/microservices';

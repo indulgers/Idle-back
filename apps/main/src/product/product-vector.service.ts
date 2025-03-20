@@ -23,6 +23,7 @@ export class ProductVectorService implements OnModuleInit {
         name: this.collectionName,
         embeddingFunction: {
           generate: async (texts: string[]) => {
+            console.log('正在生成产品向量...', texts);
             // 使用现有的嵌入服务生成向量
             const embeddings = await Promise.all(
               texts.map((text) =>
@@ -46,74 +47,74 @@ export class ProductVectorService implements OnModuleInit {
   /**
    * 初始化所有现有产品到向量数据库
    */
-  // private async initializeProductVectors() {
-  //   try {
-  //     console.log('开始初始化产品向量...');
-  //     const results = await this.collection.get();
-  //     console.log(results);
-  //     // 获取向量库中已有的产品ID
-  //     console.log(
-  //       await this.collection.query({
-  //         queryTexts: ['键盘'],
-  //       }),
-  //     );
-  //     const existingIds = await this.getExistingProductIds();
-  //     console.log(`向量库中已有 ${existingIds.size} 个产品索引`);
+  private async initializeProductVectors() {
+    try {
+      console.log('开始初始化产品向量...');
+      const results = await this.collection.get();
+      console.log(results);
+      // 获取向量库中已有的产品ID
+      console.log(
+        await this.collection.query({
+          queryTexts: ['键盘'],
+        }),
+      );
+      const existingIds = await this.getExistingProductIds();
+      console.log(`向量库中已有 ${existingIds.size} 个产品索引`);
 
-  //     // 获取所有已验证的产品，但不在向量库中的产品
-  //     const products = await this.prisma.product.findMany({
-  //       where: {
-  //         status: 'VERIFIED',
-  //         id: { notIn: Array.from(existingIds) },
-  //       },
-  //       select: {
-  //         id: true,
-  //         name: true,
-  //         description: true,
-  //       },
-  //     });
+      // 获取所有已验证的产品，但不在向量库中的产品
+      const products = await this.prisma.product.findMany({
+        where: {
+          status: 'VERIFIED',
+          id: { notIn: Array.from(existingIds) },
+        },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+        },
+      });
 
-  //     if (products.length === 0) {
-  //       console.log('没有需要初始化的新产品');
-  //       return;
-  //     }
+      if (products.length === 0) {
+        console.log('没有需要初始化的新产品');
+        return;
+      }
 
-  //     console.log(`找到 ${products.length} 个未索引的产品，开始批量索引...`);
+      console.log(`找到 ${products.length} 个未索引的产品，开始批量索引...`);
 
-  //     // 准备批量索引数据
-  //     const batchData = products.map((product) => ({
-  //       id: product.id,
-  //       content: `${product.name} ${product.description}`,
-  //     }));
+      // 准备批量索引数据
+      const batchData = products.map((product) => ({
+        id: product.id,
+        content: `${product.name} ${product.description}`,
+      }));
 
-  //     // 批量处理，每批 100 个
-  //     const batchSize = 100;
-  //     for (let i = 0; i < batchData.length; i += batchSize) {
-  //       const batch = batchData.slice(i, i + batchSize);
-  //       await this.batchIndexProducts(batch);
-  //       console.log(
-  //         `已处理 ${Math.min(i + batchSize, batchData.length)}/${batchData.length} 个产品`,
-  //       );
-  //     }
+      // 批量处理，每批 100 个
+      const batchSize = 100;
+      for (let i = 0; i < batchData.length; i += batchSize) {
+        const batch = batchData.slice(i, i + batchSize);
+        await this.batchIndexProducts(batch);
+        console.log(
+          `已处理 ${Math.min(i + batchSize, batchData.length)}/${batchData.length} 个产品`,
+        );
+      }
 
-  //     console.log('产品向量初始化完成');
-  //   } catch (error) {
-  //     console.error('初始化产品向量失败:', error);
-  //   }
-  // }
+      console.log('产品向量初始化完成');
+    } catch (error) {
+      console.error('初始化产品向量失败:', error);
+    }
+  }
 
   /**
    * 获取向量库中已存在的产品ID
    */
-  // private async getExistingProductIds(): Promise<Set<string>> {
-  //   try {
-  //     const result = await this.collection.get();
-  //     return new Set(result.ids || []);
-  //   } catch (error) {
-  //     console.error('获取现有产品ID失败:', error);
-  //     return new Set();
-  //   }
-  // }
+  private async getExistingProductIds(): Promise<Set<string>> {
+    try {
+      const result = await this.collection.get();
+      return new Set(result.ids || []);
+    } catch (error) {
+      console.error('获取现有产品ID失败:', error);
+      return new Set();
+    }
+  }
 
   /**
    * 添加或更新产品向量
@@ -168,11 +169,12 @@ export class ProductVectorService implements OnModuleInit {
   ) {
     try {
       // 查询相似产品
+      console.log('开始语义搜索:', query);
       const results = await this.collection.query({
         queryTexts: [query],
         nResults: limit,
       });
-
+      console.log('语义搜索结果:', results);
       // 过滤并记录相似度信息
       const ids = results.ids[0] || [];
       const distances = results.distances?.[0] || [];
