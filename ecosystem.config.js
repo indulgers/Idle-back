@@ -11,8 +11,6 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 3000, // 网关服务通常在主端口
-        CHROMA_DB_URL: process.env.CHROMA_DB_URL || 'http://localhost:8000',
-        REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',
       },
       env_development: {
         NODE_ENV: 'development',
@@ -21,9 +19,6 @@ module.exports = {
       log_date_format: 'YYYY-MM-DD HH:mm:ss',
       error_file: 'logs/gateway-error.log',
       out_file: 'logs/gateway-out.log',
-      time: true,
-      log_rotate: true,
-      max_logs: '10d',
     },
     {
       name: 'nest-main',
@@ -36,8 +31,6 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 3001,
-        CHROMA_DB_URL: process.env.CHROMA_DB_URL || 'http://localhost:8000',
-        REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',
       },
       env_development: {
         NODE_ENV: 'development',
@@ -46,9 +39,6 @@ module.exports = {
       log_date_format: 'YYYY-MM-DD HH:mm:ss',
       error_file: 'logs/main-error.log',
       out_file: 'logs/main-out.log',
-      time: true,
-      log_rotate: true,
-      max_logs: '10d',
     },
     {
       name: 'nest-admin',
@@ -60,15 +50,10 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 3002,
-        CHROMA_DB_URL: process.env.CHROMA_DB_URL || 'http://localhost:8000',
-        REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',
       },
       log_date_format: 'YYYY-MM-DD HH:mm:ss',
       error_file: 'logs/admin-error.log',
       out_file: 'logs/admin-out.log',
-      time: true,
-      log_rotate: true,
-      max_logs: '10d',
     },
     {
       name: 'nest-user',
@@ -88,31 +73,17 @@ module.exports = {
     {
       name: 'nest-content',
       script: 'dist/apps/content/main.js',
-      instances: 2,
-      exec_mode: 'cluster',
+      instances: 1,
       autorestart: true,
       watch: false,
       max_memory_restart: '1G',
       env: {
         NODE_ENV: 'production',
         PORT: 3004,
-        CHROMA_DB_URL: process.env.CHROMA_DB_URL || 'http://localhost:8000',
-        REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',
-        MINIO_ENDPOINT: process.env.MINIO_ENDPOINT || 'localhost',
-        MINIO_PORT: process.env.MINIO_PORT || '9000',
-        MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
-        MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
-      },
-      env_development: {
-        NODE_ENV: 'development',
-        PORT: 3004,
       },
       log_date_format: 'YYYY-MM-DD HH:mm:ss',
       error_file: 'logs/content-error.log',
       out_file: 'logs/content-out.log',
-      time: true,
-      log_rotate: true,
-      max_logs: '10d',
     },
   ],
 };

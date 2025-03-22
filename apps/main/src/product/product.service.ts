@@ -117,6 +117,30 @@ export class ProductService {
         }
       }
 
+      // 如果提供了位置搜索参数，添加位置搜索逻辑
+      if (query.maxDistance && query.centerLatitude && query.centerLongitude) {
+        const earthRadius = 6371; // 地球半径，单位为km
+
+        // 使用 Haversine 公式计算距离
+        // 这里仅为示例，实际SQL实现会有所不同
+
+        // 简化版：在应用层过滤结果
+        const filteredResults = combinedItems.filter((product) => {
+          if (product.latitude && product.longitude) {
+            const distance = this.calculateDistance(
+              query.centerLatitude,
+              query.centerLongitude,
+              product.latitude,
+              product.longitude,
+            );
+            return distance <= query.maxDistance;
+          }
+          return false;
+        });
+
+        combinedItems = filteredResults;
+      }
+
       // 记录搜索行为
       this.recordSearchBehavior(keyword, combinedItems).catch((error) => {
         console.error('记录搜索行为失败:', error);
@@ -151,6 +175,7 @@ export class ProductService {
 
   // 修改 create 方法来添加向量索引
   async create(data: CreateProductDto) {
+    const imageUrl = JSON.stringify(data.images || []);
     const product = await this.prisma.product.create({
       data: {
         id: guid(),
@@ -160,11 +185,15 @@ export class ProductService {
         userId: data.userId,
         communityId: data.communityId,
         categoryId: data.categoryId,
-        imageUrl: data.imageUrl,
+        imageUrl,
         tags: data.tags,
         viewCount: 0,
         purchaseCount: 0,
         status: 'PENDING',
+        // 添加位置信息
+        latitude: data.latitude,
+        longitude: data.longitude,
+        locationDetail: data.locationDetail,
       },
     });
     console.log('创建物品:', product);
@@ -337,5 +366,31 @@ export class ProductService {
     });
 
     return ResultData.ok(updated);
+  }
+
+  // 添加辅助方法计算两点之间距离
+  private calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number {
+    const earthRadius = 6371; // 地球半径，单位为km
+    const dLat = this.degreesToRadians(lat2 - lat1);
+    const dLon = this.degreesToRadians(lon2 - lon1);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.degreesToRadians(lat1)) *
+        Math.cos(this.degreesToRadians(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return earthRadius * c;
+  }
+
+  private degreesToRadians(degrees: number): number {
+    return (degrees * Math.PI) / 180;
   }
 }

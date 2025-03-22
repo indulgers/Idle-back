@@ -57,22 +57,25 @@ model Role {
 }
 
 model Product {
-  id            String             @id @default(cuid())
-  name          String             @db.VarChar(50)
-  description   String             @db.VarChar(255)
-  price         Int
-  userId        String             @db.VarChar(50)
-  status        VerificationStatus @default(PENDING)
-  createTime    DateTime           @default(now())
-  updateTime    DateTime           @default(now()) @updatedAt
-  communityId   String
-  viewCount     Int                @default(0)
-  purchaseCount Int                @default(0)
-  imageUrl      String             @db.Text
-  categoryId    String             @db.VarChar(50)
-  tags          String?            @db.VarChar(255)
-  comments      Comment[]
-  Order         Order[]
+  id             String             @id @default(cuid())
+  name           String             @db.VarChar(50)
+  description    String             @db.VarChar(255)
+  price          Int
+  userId         String             @db.VarChar(50)
+  status         VerificationStatus @default(PENDING)
+  createTime     DateTime           @default(now())
+  updateTime     DateTime           @default(now()) @updatedAt
+  communityId    String
+  viewCount      Int                @default(0)
+  purchaseCount  Int                @default(0)
+  imageUrl       String             @db.Text
+  categoryId     String             @db.VarChar(50)
+  tags           String?            @db.VarChar(255)
+  latitude       Float?
+  longitude      Float?
+  locationDetail String?            @db.VarChar(255)
+  comments       Comment[]
+  Order          Order[]
 
   @@index([communityId])
   @@index([userId])
@@ -88,21 +91,21 @@ model Category {
 model Donation {
   id          String            @id @default(uuid())
   name        String
-  userId      String
+  description String?
+  categoryId  String
+  condition   String?
+  images      String            @db.Text
   status      DonationStatus    @default(PENDING)
+  userId      String
+  communityId String
+  pointValue  Int               @default(50)
   createTime  DateTime          @default(now())
   updateTime  DateTime          @updatedAt
-  communityId String
-  categoryId  String
   claimId     String?
   claimTime   DateTime?
-  condition   String?
-  description String?
-  eventId     String?
-  images      String            @db.Text
-  pointValue  Int               @default(50)
-  verifyNote  String?
   verifyTime  DateTime?
+  verifyNote  String?
+  eventId     String?
   category    Category          @relation(fields: [categoryId], references: [id])
   user        User              @relation(fields: [userId], references: [id])
   community   Community         @relation(fields: [communityId], references: [id])
@@ -169,8 +172,8 @@ model Post {
   updateTime    DateTime       @updatedAt
   favoriteCount Int            @default(0)
   likeCount     Int            @default(0)
-  topic         String         @default("未分类") @db.VarChar(50)
   viewCount     Int            @default(0)
+  topic         String         @default("未分类") @db.VarChar(50)
   comments      Comment[]
   likes         PostLike[]
   favorites     PostFavorite[]

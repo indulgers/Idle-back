@@ -1,0 +1,43 @@
+version: '3.8'
+
+# 开发环境专用配置
+services:
+  gateway:
+    build:
+      args:
+        - NODE_ENV=development
+      target: builder # 使用builder阶段，保留开发工具
+    command: npm run start:gateway
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  main:
+    build:
+      args:
+        - NODE_ENV=development
+      target: builder
+    command: npm run start:main
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  content:
+    build:
+      args:
+        - NODE_ENV=development
+      target: builder
+    command: npm run start:content
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  admin:
+    build:
+      args:
+        - NODE_ENV=development
+      target: builder
+    command: npm run start:admin
+    volumes:
+      - .:/app
+      - /app/node_modules 

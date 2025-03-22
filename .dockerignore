@@ -1,0 +1,17 @@
+# 依赖目录
+node_modules
+npm-debug.log
+
+# 构建输出
+dist
+
+# 其他不需要的文件
+.git
+.github
+.vscode
+coverage
+.env
+.env.*
+logs
+*.log
+README.md

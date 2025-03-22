@@ -8,7 +8,7 @@ import { PrismaService } from '@app/prisma';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { guid, ResultData } from '@app/common';
 import { BehaviorService } from '../behavior/behavior.service'; // 添加行为服务导入
-import { OrderStatus } from '@prisma/client';
+import { LogisticsStatus, OrderStatus } from '@prisma/client';
 
 @Injectable()
 export class OrderService {
@@ -512,7 +512,7 @@ export class OrderService {
       const updatedOrder = await this.prisma.order.update({
         where: { id },
         data: {
-          status,
+          status: status as OrderStatus,
           updateTime: new Date(),
         },
       });
@@ -536,6 +536,7 @@ export class OrderService {
   }
 
   // 创建或更新物流信息
+  // 创建或更新物流信息
   private async createOrUpdateLogistics(
     orderId: string,
     receiverId: string,
@@ -550,19 +551,32 @@ export class OrderService {
         where: { id: existingLogistics.id },
         data: {
           updateTime: new Date(),
-          status: 'SHIPPING',
+          status: 'SHIPPING' as LogisticsStatus,
         },
       });
     }
 
+    // 获取订单和产品信息以生成物流名称
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { product: true },
+    });
+
+    // 生成物流名称
+    const logisticsName = `${order?.product?.name || '商品'} 配送`;
+
     return await this.prisma.logistics.create({
       data: {
         id: guid(),
+        name: logisticsName, // 添加名称
         transactionId: orderId,
         receiverId,
         senderId,
-        status: 'SHIPPING',
-        trackingNumber: `TN${Date.now()}`, // 生成临时跟踪号
+        status: 'SHIPPING' as LogisticsStatus,
+        trackingNumber: `TN${Date.now()}`, // 临时跟踪号
+        senderAddress: '发货地址待更新', // 添加发货地址
+        receiverAddress: '收货地址待更新', // 添加收货地址
+        address: '配送地址待更新', // 添加地址
       },
     });
   }

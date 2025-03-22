@@ -190,24 +190,25 @@ export class UserService implements OnModuleInit {
   // 获取用户资料
   async getUserProfile(userId: string) {
     try {
+      console.log('userId', userId);
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
-        include: {
-          community: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-          role: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
+        // include: {
+        //   community: {
+        //     select: {
+        //       id: true,
+        //       name: true,
+        //     },
+        //   },
+        //   role: {
+        //     select: {
+        //       id: true,
+        //       name: true,
+        //     },
+        //   },
+        // },
       });
-
+      console.log('user', user);
       if (!user) {
         throw new NotFoundException('用户不存在');
       }
@@ -244,8 +245,8 @@ export class UserService implements OnModuleInit {
         phone: user.phone,
         status: user.status,
         createTime: user.createTime,
-        community: user.community,
-        role: user.role,
+        // community: user.community,
+        // role: user.role,
         points: totalPoints,
         stats: {
           donationsCount,
@@ -258,10 +259,6 @@ export class UserService implements OnModuleInit {
       if (error instanceof NotFoundException) {
         throw new HttpException(error.message, HttpStatus.NOT_FOUND);
       }
-      throw new HttpException(
-        '获取用户资料失败',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
     }
   }
 

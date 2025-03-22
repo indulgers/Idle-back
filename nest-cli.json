@@ -5,10 +5,10 @@
   "compilerOptions": {
     "deleteOutDir": true,
     "webpack": true,
-    "tsConfigPath": "apps/micro-system/tsconfig.app.json"
+    "tsConfigPath": "apps/main/tsconfig.app.json"
   },
   "monorepo": true,
-  "root": "apps/micro-system",
+  "root": "apps/main",
   "projects": {
     "user": {
       "type": "application",

@@ -45,15 +45,37 @@ export class CreateProductDto {
   @IsNotEmpty()
   categoryId: string;
 
-  @ApiProperty({ description: 'url' })
-  @IsString()
-  @IsNotEmpty()
-  imageUrl: string;
-
   @ApiProperty({ description: '标签' })
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
   tags: string;
+
+  @ApiProperty({
+    description: '产品图片URL数组',
+    type: [String],
+    example: [
+      'https://example.com/image1.jpg',
+      'https://example.com/image2.jpg',
+    ],
+  })
+  @IsString({ each: true })
+  @IsNotEmpty()
+  images: string[]; // 将imageUrl改为images数组
+
+  @ApiProperty({ description: '纬度', required: false })
+  @IsOptional()
+  @IsNumber()
+  latitude?: number;
+
+  @ApiProperty({ description: '经度', required: false })
+  @IsOptional()
+  @IsNumber()
+  longitude?: number;
+
+  @ApiProperty({ description: '位置详情', required: false })
+  @IsOptional()
+  @IsString()
+  locationDetail?: string;
 }
 
 export class UpdateProductDto {
@@ -71,6 +93,30 @@ export class UpdateProductDto {
   @IsNumber()
   @IsOptional()
   price?: number;
+
+  @ApiProperty({
+    description: '产品图片URL数组',
+    type: [String],
+    required: false,
+  })
+  @IsString({ each: true })
+  @IsOptional()
+  images?: string[]; // 将可选的imageUrl改为可选的images数组
+
+  @ApiProperty({ description: '纬度', required: false })
+  @IsOptional()
+  @IsNumber()
+  latitude?: number;
+
+  @ApiProperty({ description: '经度', required: false })
+  @IsOptional()
+  @IsNumber()
+  longitude?: number;
+
+  @ApiProperty({ description: '位置详情', required: false })
+  @IsOptional()
+  @IsString()
+  locationDetail?: string;
 }
 
 export class QueryProductDto {
@@ -138,4 +184,19 @@ export class QueryProductDto {
   @IsOptional()
   @IsString()
   userId?: string;
+
+  @ApiProperty({ description: '距离中心点的最大距离(km)', required: false })
+  @IsOptional()
+  @IsNumber()
+  maxDistance?: number;
+
+  @ApiProperty({ description: '搜索中心点纬度', required: false })
+  @IsOptional()
+  @IsNumber()
+  centerLatitude?: number;
+
+  @ApiProperty({ description: '搜索中心点经度', required: false })
+  @IsOptional()
+  @IsNumber()
+  centerLongitude?: number;
 }
