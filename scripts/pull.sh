@@ -24,6 +24,21 @@ print_service() {
     echo -e "${BLUE}==> 服务: $1${NC}"
 }
 
+# 检查并启动/重启服务的函数
+restart_or_start_service() {
+  local service_name=$1
+  print_service "处理服务: $service_name"
+  
+  # 检查服务是否已经存在
+  if pm2 id $service_name > /dev/null 2>&1; then
+    echo "重启服务: $service_name"
+    pm2 restart $service_name
+  else
+    echo "启动服务: $service_name"
+    pm2 start ecosystem.config.js --only $service_name
+  fi
+}
+
 # 错误处理
 set -e
 
@@ -58,20 +73,14 @@ pnpm run build content
 print_service "构建单体服务 - admin"
 pnpm run build admin
 
-# 5. 重启 PM2 服务
-print_message "正在重启服务..."
+# 5. 处理 PM2 服务
+print_message "正在管理服务..."
 
-# 先重启网关
-print_service "重启网关服务"
-pm2 restart nest-gateway
-
-# 重启微服务组
-print_service "重启微服务组"
-pm2 restart nest-main nest-content
-
-# 重启单体服务
-print_service "重启单体服务"
-pm2 restart nest-admin
+# 使用新函数处理各个服务
+restart_or_start_service "nest-gateway"
+restart_or_start_service "nest-main"
+restart_or_start_service "nest-content"
+restart_or_start_service "nest-admin"
 
 # 计算执行时间
 end_time=$(date +%s)
