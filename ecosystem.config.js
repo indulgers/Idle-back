@@ -29,8 +29,10 @@ module.exports = {
     {
       name: 'nest-main',
       script: 'dist/apps/main/main.js',
-      instances: 2, // 运行两个实例实现负载均衡
-      exec_mode: 'cluster',
+      instances: 1, // 改为1个实例，避免端口冲突
+      // 或者修改为fork模式
+      // exec_mode: 'fork',
+      // instances: 2,
       autorestart: true,
       watch: false,
       max_memory_restart: '1G',
@@ -41,13 +43,7 @@ module.exports = {
         CONTENT_SERVICE_HOST: 'localhost',
         CONTENT_SERVICE_PORT: 3004,
       },
-      env_development: {
-        NODE_ENV: 'development',
-        PORT: 3001,
-      },
-      log_date_format: 'YYYY-MM-DD HH:mm:ss',
-      error_file: 'logs/main-error.log',
-      out_file: 'logs/main-out.log',
+      // ...其他配置不变
     },
     {
       name: 'nest-content',
