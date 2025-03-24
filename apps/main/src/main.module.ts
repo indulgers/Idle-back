@@ -48,6 +48,16 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
       global: true,
       secret: jwtConstants.secret,
     }),
+    ClientsModule.register([
+      {
+        name: 'MAIN_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: '127.0.0.1', // 显式指定 IPv4
+          port: 3001, // 与 PM2 配置一致
+        },
+      },
+    ]),
     // PostModule,
     // CommentModule,
     ProductModule,

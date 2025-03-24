@@ -3,19 +3,17 @@ module.exports = {
     {
       name: 'nest-gateway',
       script: 'dist/apps/gateway/main.js',
-      instances: 'max', // 使用集群模式，根据CPU核心数自动调整
-      exec_mode: 'cluster',
+      instances: 1,
       autorestart: true,
       watch: false,
       max_memory_restart: '1G',
       env: {
         NODE_ENV: 'production',
         PORT: 3000,
-        GATEWAY_PORT: 3000,
-        MAIN_SERVICE_HOST: 'localhost',
-        MAIN_SERVICE_PORT: 3001, // TCP微服务端口
-        MAIN_HTTP_PORT: 3011, // 添加HTTP端口配置
-        CONTENT_SERVICE_HOST: 'localhost',
+        MAIN_SERVICE_HOST: '127.0.0.1', // 修改为 IPv4 地址
+        MAIN_SERVICE_PORT: 3001,
+        MAIN_HTTP_PORT: 3011,
+        CONTENT_SERVICE_HOST: '127.0.0.1', // 同上
         CONTENT_SERVICE_PORT: 3004,
       },
       env_development: {
