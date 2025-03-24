@@ -38,7 +38,7 @@ npx prisma db push
 print_message "正在构建项目..."
 pnpm run build main 
 pnpm run build admin
-
+pnpm run build content
 # 5. 重启 PM2 服务
 print_message "正在重启服务..."
 pm2 restart all
