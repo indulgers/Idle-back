@@ -10,7 +10,12 @@ module.exports = {
       max_memory_restart: '1G',
       env: {
         NODE_ENV: 'production',
-        PORT: 3000, // 网关服务通常在主端口
+        PORT: 3000,
+        GATEWAY_PORT: 3000,
+        MAIN_SERVICE_HOST: 'localhost',
+        MAIN_SERVICE_PORT: 3001,
+        CONTENT_SERVICE_HOST: 'localhost',
+        CONTENT_SERVICE_PORT: 3004,
       },
       env_development: {
         NODE_ENV: 'development',
@@ -20,6 +25,7 @@ module.exports = {
       error_file: 'logs/gateway-error.log',
       out_file: 'logs/gateway-out.log',
     },
+    // 微服务组 - 用于微服务通信
     {
       name: 'nest-main',
       script: 'dist/apps/main/main.js',
@@ -31,6 +37,9 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 3001,
+        MAIN_SERVICE_PORT: 3001,
+        CONTENT_SERVICE_HOST: 'localhost',
+        CONTENT_SERVICE_PORT: 3004,
       },
       env_development: {
         NODE_ENV: 'development',
@@ -40,6 +49,23 @@ module.exports = {
       error_file: 'logs/main-error.log',
       out_file: 'logs/main-out.log',
     },
+    {
+      name: 'nest-content',
+      script: 'dist/apps/content/main.js',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '1G',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3004,
+        CONTENT_SERVICE_PORT: 3004,
+      },
+      log_date_format: 'YYYY-MM-DD HH:mm:ss',
+      error_file: 'logs/content-error.log',
+      out_file: 'logs/content-out.log',
+    },
+    // 单体服务 - 独立运行
     {
       name: 'nest-admin',
       script: 'dist/apps/admin/main.js',
@@ -54,21 +80,6 @@ module.exports = {
       log_date_format: 'YYYY-MM-DD HH:mm:ss',
       error_file: 'logs/admin-error.log',
       out_file: 'logs/admin-out.log',
-    },
-    {
-      name: 'nest-content',
-      script: 'dist/apps/content/main.js',
-      instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '1G',
-      env: {
-        NODE_ENV: 'production',
-        PORT: 3004,
-      },
-      log_date_format: 'YYYY-MM-DD HH:mm:ss',
-      error_file: 'logs/content-error.log',
-      out_file: 'logs/content-out.log',
     },
   ],
 };
