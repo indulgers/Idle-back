@@ -3,17 +3,18 @@ module.exports = {
     {
       name: 'nest-gateway',
       script: 'dist/apps/gateway/main.js',
-      instances: 1,
+      instances: 'max', // 使用集群模式，根据CPU核心数自动调整
+      exec_mode: 'cluster',
       autorestart: true,
       watch: false,
       max_memory_restart: '1G',
       env: {
         NODE_ENV: 'production',
         PORT: 3000,
-        MAIN_SERVICE_HOST: '127.0.0.1', // 修改为 IPv4 地址
+        GATEWAY_PORT: 3000,
+        MAIN_SERVICE_HOST: 'localhost',
         MAIN_SERVICE_PORT: 3001,
-        MAIN_HTTP_PORT: 3011,
-        CONTENT_SERVICE_HOST: '127.0.0.1', // 同上
+        CONTENT_SERVICE_HOST: 'localhost',
         CONTENT_SERVICE_PORT: 3004,
       },
       env_development: {
@@ -25,21 +26,24 @@ module.exports = {
       out_file: 'logs/gateway-out.log',
     },
     // 微服务组 - 用于微服务通信
-    // 在nest-main配置中添加HTTP端口
     {
       name: 'nest-main',
       script: 'dist/apps/main/main.js',
-      instances: 1,
+      instances: 2, // 运行两个实例实现负载均衡
+      exec_mode: 'cluster',
       autorestart: true,
       watch: false,
       max_memory_restart: '1G',
       env: {
         NODE_ENV: 'production',
         PORT: 3001,
-        MAIN_SERVICE_PORT: 3001, // TCP微服务端口
-        MAIN_HTTP_PORT: 3011, // HTTP服务端口
+        MAIN_SERVICE_PORT: 3001,
         CONTENT_SERVICE_HOST: 'localhost',
         CONTENT_SERVICE_PORT: 3004,
+      },
+      env_development: {
+        NODE_ENV: 'development',
+        PORT: 3001,
       },
       log_date_format: 'YYYY-MM-DD HH:mm:ss',
       error_file: 'logs/main-error.log',
