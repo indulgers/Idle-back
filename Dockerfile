@@ -3,9 +3,10 @@ FROM node:18-alpine as builder
 WORKDIR /app
 
 COPY package*.json ./
+COPY prisma ./prisma/
 RUN npm install -g pnpm
 RUN pnpm install
-
+RUN npx prisma generate
 COPY . .
 RUN pnpm run build
 
