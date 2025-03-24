@@ -32,4 +32,14 @@ export class ChatController {
     console.log('roomId', roomId);
     return this.chatService.getMessages(roomId);
   }
+
+  @Get('check')
+  @ApiOperation({ summary: '检查聊天室是否存在' })
+  async checkRoom(
+    @Query('sellerId') sellerId: string,
+    @Query('buyerId') buyerId: string,
+    @Query('productId') productId?: string,
+  ) {
+    return this.chatService.checkRoom(sellerId, buyerId, productId);
+  }
 }

@@ -7,11 +7,10 @@ import { jwtConstants } from '@app/common/enums/constant';
 import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { CacheModule } from '@app/cache';
-
-// 从main服务迁移的模块
 import { PostModule } from './post/post.module';
 import { CommentModule } from './comment/comment.module';
 import { CommunityModule } from './community/community.module';
+import { PointModule } from './point/point.module';
 
 @Module({
   imports: [
@@ -28,6 +27,7 @@ import { CommunityModule } from './community/community.module';
     PostModule,
     CommentModule,
     CommunityModule,
+    PointModule,
   ],
   controllers: [ContentController],
   providers: [ContentService, PrismaService],

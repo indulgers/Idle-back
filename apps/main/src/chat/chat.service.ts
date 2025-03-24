@@ -35,6 +35,21 @@ export class ChatService {
     return ResultData.ok(room);
   }
 
+  // 检查聊天室是否存在
+  async checkRoom(sellerId: string, buyerId: string, productId?: string) {
+    const room = await this.prisma.chat.findFirst({
+      where: {
+        sellerId,
+        buyerId,
+      },
+    });
+
+    return ResultData.ok({
+      exists: !!room,
+      chatId: room?.id,
+    });
+  }
+
   // 发送消息
   async sendMessage(data: SendMessageDto) {
     const room = await this.prisma.chat.findUnique({
@@ -47,7 +62,7 @@ export class ChatService {
     if (!room) {
       throw new HttpException('聊天室不存在', HttpStatus.NOT_FOUND);
     }
-
+    console.log('room', room);
     if (room.buyerId !== data.senderId && room.sellerId !== data.senderId) {
       throw new HttpException('无权访问该聊天室', HttpStatus.FORBIDDEN);
     }

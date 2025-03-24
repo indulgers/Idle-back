@@ -108,7 +108,7 @@ export class ProductService {
       }
       console.log('语义匹配结果:', semanticItems);
       // 合并搜索结果，去重
-      const combinedItems = [...basicItems];
+      let combinedItems = [...basicItems];
       const basicItemIds = new Set(basicItems.map((item) => item.id));
       console.log('基本搜索结果:', basicItems);
       for (const item of semanticItems) {
