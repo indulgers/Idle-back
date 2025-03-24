@@ -7,7 +7,7 @@ services:
       args:
         - NODE_ENV=development
       target: builder # 使用builder阶段，保留开发工具
-    command: npm run start:gateway
+    command: pnpm run start:gateway
     volumes:
       - .:/app
       - /app/node_modules
@@ -17,7 +17,7 @@ services:
       args:
         - NODE_ENV=development
       target: builder
-    command: npm run start:main
+    command: pnpm run start:main
     volumes:
       - .:/app
       - /app/node_modules
@@ -27,7 +27,7 @@ services:
       args:
         - NODE_ENV=development
       target: builder
-    command: npm run start:content
+    command: pnpm run start:content
     volumes:
       - .:/app
       - /app/node_modules
@@ -37,7 +37,7 @@ services:
       args:
         - NODE_ENV=development
       target: builder
-    command: npm run start:admin
+    command: pnpm run start:admin
     volumes:
       - .:/app
       - /app/node_modules 
