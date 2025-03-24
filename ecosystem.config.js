@@ -13,7 +13,8 @@ module.exports = {
         PORT: 3000,
         GATEWAY_PORT: 3000,
         MAIN_SERVICE_HOST: 'localhost',
-        MAIN_SERVICE_PORT: 3001,
+        MAIN_SERVICE_PORT: 3001, // TCP微服务端口
+        MAIN_HTTP_PORT: 3011, // 添加HTTP端口配置
         CONTENT_SERVICE_HOST: 'localhost',
         CONTENT_SERVICE_PORT: 3004,
       },
@@ -26,24 +27,25 @@ module.exports = {
       out_file: 'logs/gateway-out.log',
     },
     // 微服务组 - 用于微服务通信
+    // 在nest-main配置中添加HTTP端口
     {
       name: 'nest-main',
       script: 'dist/apps/main/main.js',
-      instances: 1, // 改为1个实例，避免端口冲突
-      // 或者修改为fork模式
-      // exec_mode: 'fork',
-      // instances: 2,
+      instances: 1,
       autorestart: true,
       watch: false,
       max_memory_restart: '1G',
       env: {
         NODE_ENV: 'production',
         PORT: 3001,
-        MAIN_SERVICE_PORT: 3001,
+        MAIN_SERVICE_PORT: 3001, // TCP微服务端口
+        MAIN_HTTP_PORT: 3011, // HTTP服务端口
         CONTENT_SERVICE_HOST: 'localhost',
         CONTENT_SERVICE_PORT: 3004,
       },
-      // ...其他配置不变
+      log_date_format: 'YYYY-MM-DD HH:mm:ss',
+      error_file: 'logs/main-error.log',
+      out_file: 'logs/main-out.log',
     },
     {
       name: 'nest-content',

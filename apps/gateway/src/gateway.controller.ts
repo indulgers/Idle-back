@@ -31,6 +31,9 @@ export class GatewayController {
   async forwardToMainService(@Req() req: Request, @Res() res: Response) {
     const path = req.path.replace('/api/main/', '');
     try {
+      // 使用环境变量中配置的HTTP端口
+      const mainHttpPort = process.env.MAIN_HTTP_PORT || '3011';
+      const targetUrl = `http://${process.env.MAIN_SERVICE_HOST || 'localhost'}:${mainHttpPort}${req.url}`;
       // 使用HTTP转发
       const mainServiceUrl = `http://${process.env.MAIN_SERVICE_HOST || 'localhost'}:${process.env.MAIN_SERVICE_PORT || '3001'}/api/main/${path}`;
       const response = await firstValueFrom(
