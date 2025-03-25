@@ -29,8 +29,8 @@ module.exports = {
     {
       name: 'nest-main',
       script: 'dist/apps/main/main.js',
-      instances: 2, // 运行两个实例实现负载均衡
-      exec_mode: 'cluster',
+      instances: 1,
+      // exec_mode: 'cluster',
       autorestart: true,
       watch: false,
       max_memory_restart: '1G',

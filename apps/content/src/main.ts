@@ -33,7 +33,7 @@ async function bootstrap() {
 
   // 启动微服务
   await app.startAllMicroservices();
-  await app.listen(process.env.CONTENT_SERVICE_PORT ?? 3004);
+  await app.listen(process.env.CONTENT_SERVICE_PORT ?? 3004, '127.0.0.1');
   console.log(`Content service is running on: ${await app.getUrl()}`);
 }
 bootstrap();
