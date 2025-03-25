@@ -16,6 +16,8 @@ module.exports = {
         MAIN_SERVICE_PORT: 3001,
         CONTENT_SERVICE_HOST: 'localhost',
         CONTENT_SERVICE_PORT: 3004,
+        MAIN_HTTP_PORT: 3011,
+        CONTENT_HTTP_PORT: 3014,
       },
       env_development: {
         NODE_ENV: 'development',
@@ -40,6 +42,7 @@ module.exports = {
         MAIN_SERVICE_PORT: 3001,
         CONTENT_SERVICE_HOST: 'localhost',
         CONTENT_SERVICE_PORT: 3004,
+        MAIN_HTTP_PORT: 3011,
       },
       env_development: {
         NODE_ENV: 'development',
@@ -60,6 +63,7 @@ module.exports = {
         NODE_ENV: 'production',
         PORT: 3004,
         CONTENT_SERVICE_PORT: 3004,
+        CONTENT_HTTP_PORT: 3014,
       },
       log_date_format: 'YYYY-MM-DD HH:mm:ss',
       error_file: 'logs/content-error.log',
