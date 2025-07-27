@@ -7,10 +7,17 @@ import { ClaimDonationDto } from './dto/update-donation.dto';
 import { FeedbackDonationDto } from './dto/update-donation.dto';
 import { guid, ResultData } from '@app/common';
 import { DonationStatus, Prisma } from '@prisma/client';
+import { ExchangeDonationDto } from './dto/exchange-donation.dto';
+import { ClientProxy } from '@nestjs/microservices';
+import { Inject } from '@nestjs/common';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class DonationService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject('CONTENT_SERVICE') private contentClient: ClientProxy,
+  ) {}
 
   // 创建捐赠
   async create(createDonationDto: CreateDonationDto) {
@@ -24,7 +31,6 @@ export class DonationService {
             ? JSON.stringify(createDonationDto.images)
             : createDonationDto.images,
           status: DonationStatus.PENDING,
-          pointValue: createDonationDto.pointValue || 50, // 默认50积分
         },
       });
 
@@ -417,6 +423,86 @@ export class DonationService {
       console.error('取消捐赠失败:', error);
       if (error instanceof HttpException) throw error;
       throw new HttpException('取消捐赠失败', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // 使用积分兑换捐赠物品
+  async exchange(exchangeDto: ExchangeDonationDto) {
+    try {
+      const { donationId, userId } = exchangeDto;
+
+      // 查找捐赠物品
+      const donation = await this.prisma.donation.findUnique({
+        where: { id: donationId },
+      });
+
+      if (!donation) {
+        throw new HttpException('捐赠物品不存在', HttpStatus.NOT_FOUND);
+      }
+
+      // 只能兑换已审核的捐赠物品
+      if (donation.status !== DonationStatus.APPROVED) {
+        throw new HttpException('该捐赠物品不可兑换', HttpStatus.BAD_REQUEST);
+      }
+
+      // 不能兑换自己的捐赠物品
+      if (donation.userId === userId) {
+        throw new HttpException(
+          '不能兑换自己的捐赠物品',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // 通过微服务调用积分服务验证用户积分
+      const userPointsResponse = await firstValueFrom(
+        this.contentClient.send('get_user_points', { userId }),
+      );
+
+      if (!userPointsResponse || !userPointsResponse.data) {
+        throw new HttpException(
+          '获取用户积分失败',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
+      const { totalPoints } = userPointsResponse.data;
+
+      // 检查用户是否有足够积分
+      if (totalPoints < donation.pointValue) {
+        throw new HttpException(
+          `积分不足，需要${donation.pointValue}积分，当前积分${totalPoints}`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // 扣除用户积分
+      await firstValueFrom(
+        this.contentClient.send('execute_point_transaction', {
+          userId,
+          amount: -donation.pointValue,
+          description: `兑换捐赠物品: ${donation.name}`,
+        }),
+      );
+
+      // 更新捐赠状态为已领取
+      const updated = await this.prisma.donation.update({
+        where: { id: donationId },
+        data: {
+          status: DonationStatus.CLAIMED,
+          claimId: userId,
+          claimTime: new Date(),
+          updateTime: new Date(),
+        },
+      });
+
+      return ResultData.ok(updated, '兑换成功');
+    } catch (error) {
+      console.error('兑换捐赠物品失败:', error);
+      if (error instanceof HttpException) throw error;
+      throw new HttpException(
+        '兑换捐赠物品失败',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

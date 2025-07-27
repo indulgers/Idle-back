@@ -99,7 +99,7 @@ export class MinioController {
         validators: [
           new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
           new FileTypeValidator({
-            fileType: '.(png|jpeg|jpg|gif|pdf|doc|docx|xls|xlsx|txt)',
+            fileType: '.(png|jpeg|jpg|svg|gif|pdf|doc|docx|xls|xlsx|txt)',
           }),
         ],
       }),

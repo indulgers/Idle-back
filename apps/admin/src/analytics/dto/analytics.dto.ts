@@ -6,6 +6,9 @@ export class TimeRangeDto {
 
   @ApiProperty({ description: '结束时间', example: '2024-03-17' })
   endDate: string;
+  
+  @ApiProperty({ description: '社区ID', example: 'comm_fucheng_fucheng', required: false })
+  communityId?: string;
 }
 
 export class UserAnalyticsDto {

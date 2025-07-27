@@ -53,4 +53,15 @@ export class CommunityController {
   async getCommunityTree() {
     return await this.communityService.getCommunityTree();
   }
+
+  @Get('search')
+  @ApiOperation({ summary: '搜索社区' })
+  @ApiQuery({
+    name: 'keyword',
+    description: '搜索关键词',
+    required: true,
+  })
+  async searchCommunities(@Query('keyword') keyword: string) {
+    return await this.communityService.searchCommunities(keyword);
+  }
 }

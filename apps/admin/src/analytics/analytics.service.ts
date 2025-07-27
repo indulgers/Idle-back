@@ -29,18 +29,39 @@ export class AnalyticsService {
     };
   }
 
+  async getGlobalDashboardOverview(
+    timeRange: TimeRangeDto,
+  ): Promise<DashboardOverviewDto> {
+    // 不传入communityId，获取全局数据
+    const globalTimeRange = { ...timeRange };
+    delete globalTimeRange.communityId;
+
+    return this.getDashboardOverview(globalTimeRange);
+  }
+
   private async getUserAnalytics(
     timeRange: TimeRangeDto,
   ): Promise<UserAnalyticsDto> {
-    const { startDate, endDate } = timeRange;
+    const { startDate, endDate, communityId } = timeRange;
+
+    // 构建查询条件
+    const whereCondition: any = {};
+    if (communityId) {
+      whereCondition.communityId = communityId;
+    }
 
     // 获取总用户数
-    const totalUsers = Number(await this.prisma.user.count());
+    const totalUsers = Number(
+      await this.prisma.user.count({
+        where: whereCondition,
+      }),
+    );
 
     // 获取活跃用户数（在指定时间范围内有登录记录的用户）
     const activeUsers = Number(
       await this.prisma.user.count({
         where: {
+          ...whereCondition,
           updateTime: {
             gte: new Date(startDate),
             lte: new Date(endDate),
@@ -53,6 +74,7 @@ export class AnalyticsService {
     const newUsers = Number(
       await this.prisma.user.count({
         where: {
+          ...whereCondition,
           createTime: {
             gte: new Date(startDate),
             lte: new Date(endDate),
@@ -65,6 +87,7 @@ export class AnalyticsService {
     const previousPeriodUsers = Number(
       await this.prisma.user.count({
         where: {
+          ...whereCondition,
           createTime: {
             lt: new Date(startDate),
           },
@@ -76,15 +99,30 @@ export class AnalyticsService {
       previousPeriodUsers === 0 ? 100 : (newUsers / previousPeriodUsers) * 100;
 
     // 获取用户活跃度趋势
-    const userActivityTrend = await this.prisma.$queryRaw`
+    let userActivityTrendQuery = `
       SELECT 
         DATE(createTime) as date,
         CAST(COUNT(*) AS SIGNED) as activeUsers
       FROM \`User\`
-      WHERE createTime BETWEEN ${new Date(startDate)} AND ${new Date(endDate)}
+      WHERE createTime BETWEEN ? AND ?
+    `;
+
+    const queryParams = [new Date(startDate), new Date(endDate)];
+
+    // if (communityId) {
+    //   userActivityTrendQuery += ` AND communityId = ?`;
+    //   queryParams.push(communityId as string);
+    // }
+
+    userActivityTrendQuery += `
       GROUP BY DATE(createTime)
       ORDER BY date ASC
     `;
+
+    const userActivityTrend = await this.prisma.$queryRawUnsafe(
+      userActivityTrendQuery,
+      ...queryParams,
+    );
 
     return {
       totalUsers,
@@ -101,21 +139,28 @@ export class AnalyticsService {
   private async getTransactionAnalytics(
     timeRange: TimeRangeDto,
   ): Promise<TransactionAnalyticsDto> {
-    const { startDate, endDate } = timeRange;
+    const { startDate, endDate, communityId } = timeRange;
 
-    // 获取交易统计
-    const transactions = await this.prisma.order.findMany({
-      where: {
-        createTime: {
-          gte: new Date(startDate),
-          lte: new Date(endDate),
+    // 构建查询条件
+    const whereCondition: any = {
+      createTime: {
+        gte: new Date(startDate),
+        lte: new Date(endDate),
+      },
+      status: 'COMPLETED',
+    };
+
+    // 如果指定了社区ID，需要关联Product表进行查询
+    let transactions;
+    if (communityId) {
+    } else {
+      transactions = await this.prisma.order.findMany({
+        where: whereCondition,
+        select: {
+          totalPrice: true,
         },
-        status: 'COMPLETED',
-      },
-      select: {
-        totalPrice: true,
-      },
-    });
+      });
+    }
 
     const totalAmount = transactions.reduce(
       (sum, t) => sum + Number(t.totalPrice),
@@ -126,17 +171,42 @@ export class AnalyticsService {
       transactionCount > 0 ? totalAmount / transactionCount : 0;
 
     // 获取交易趋势
-    const transactionTrend = await this.prisma.$queryRaw`
+    let transactionTrendQuery = `
       SELECT 
-        DATE(createTime) as date,
-        CAST(SUM(totalPrice) AS SIGNED) as amount,
+        DATE(o.createTime) as date,
+        CAST(SUM(o.totalPrice) AS SIGNED) as amount,
         CAST(COUNT(*) AS SIGNED) as count
-      FROM \`Order\`
-      WHERE createTime BETWEEN ${new Date(startDate)} AND ${new Date(endDate)}
-        AND status = 'COMPLETED'
-      GROUP BY DATE(createTime)
+      FROM \`Order\` o
+    `;
+
+    if (communityId) {
+      transactionTrendQuery += `
+        JOIN \`Product\` p ON o.productId = p.id
+        WHERE o.createTime BETWEEN ? AND ?
+          AND o.status = 'COMPLETED'
+          AND p.communityId = ?
+      `;
+    } else {
+      transactionTrendQuery += `
+        WHERE o.createTime BETWEEN ? AND ?
+          AND o.status = 'COMPLETED'
+      `;
+    }
+
+    transactionTrendQuery += `
+      GROUP BY DATE(o.createTime)
       ORDER BY date ASC
     `;
+
+    const queryParams = [new Date(startDate), new Date(endDate)];
+    if (communityId) {
+      queryParams.push(communityId as any);
+    }
+
+    const transactionTrend = await this.prisma.$queryRawUnsafe(
+      transactionTrendQuery,
+      ...queryParams,
+    );
 
     return {
       totalAmount,
@@ -153,20 +223,32 @@ export class AnalyticsService {
   private async getProductAnalytics(
     timeRange: TimeRangeDto,
   ): Promise<ProductAnalyticsDto> {
-    const { startDate, endDate } = timeRange;
+    const { startDate, endDate, communityId } = timeRange;
+
+    // 构建查询条件
+    const whereCondition: any = {};
+    if (communityId) {
+      whereCondition.communityId = communityId;
+    }
 
     // 获取商品统计
-    const totalProducts = Number(await this.prisma.product.count());
+    const totalProducts = Number(
+      await this.prisma.product.count({
+        where: whereCondition,
+      }),
+    );
+
     const listedProducts = Number(
       await this.prisma.product.count({
         where: {
+          ...whereCondition,
           status: 'VERIFIED',
         },
       }),
     );
 
     // 获取热门商品TOP10
-    const topProducts = await this.prisma.$queryRaw`
+    let topProductsQuery = `
       SELECT 
         p.id,
         p.name,
@@ -174,12 +256,27 @@ export class AnalyticsService {
         CAST(SUM(o.totalPrice) AS SIGNED) as revenue
       FROM \`Product\` p
       LEFT JOIN \`Order\` o ON o.productId = p.id
-      WHERE o.createTime BETWEEN ${new Date(startDate)} AND ${new Date(endDate)}
+      WHERE o.createTime BETWEEN ? AND ?
         AND o.status = 'COMPLETED'
+    `;
+
+    const queryParams = [new Date(startDate), new Date(endDate)];
+
+    if (communityId) {
+      topProductsQuery += ` AND p.communityId = ?`;
+      queryParams.push(communityId as any);
+    }
+
+    topProductsQuery += `
       GROUP BY p.id, p.name
       ORDER BY sales DESC
       LIMIT 10
     `;
+
+    const topProducts = await this.prisma.$queryRawUnsafe(
+      topProductsQuery,
+      ...queryParams,
+    );
 
     return {
       totalProducts,

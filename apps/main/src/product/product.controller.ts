@@ -8,8 +8,10 @@ import {
   Param,
   Query,
   UseGuards,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { ProductService } from './product.service';
 import {
   CreateProductDto,

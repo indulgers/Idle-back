@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsOptional, IsInt, Min } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
 
 export class CreateDonationDto {
   @ApiProperty({ description: '物品名称', example: '儿童自行车' })
@@ -29,12 +29,6 @@ export class CreateDonationDto {
   @IsNotEmpty({ message: '物品图片不能为空' })
   @IsString()
   images: string;
-
-  @ApiProperty({ description: '积分价值', example: 50, required: false })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  pointValue?: number;
 
   @ApiProperty({ description: '活动ID', example: 'event123', required: false })
   @IsOptional()

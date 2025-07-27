@@ -36,7 +36,7 @@ async function bootstrap() {
 
   // 使用CONTENT_HTTP_PORT作为HTTP端口
   const httpPort = parseInt(process.env.CONTENT_HTTP_PORT || '3014');
-  await app.listen(httpPort, '0.0.0.0'); // 绑定到所有网络接口
+  await app.listen(httpPort); // 绑定到所有网络接口
 
   console.log(
     `Content service TCP is running on port: ${process.env.CONTENT_SERVICE_PORT || '3004'}`,

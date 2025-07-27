@@ -147,3 +147,27 @@ export function serializeBigInts(obj: any): any {
     ),
   );
 }
+
+export function formatDate(
+  date: Date | string,
+  useUTC: boolean = false,
+): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+
+  if (isNaN(dateObj.getTime())) {
+    console.error('Invalid date:', date);
+    return '';
+  }
+
+  if (useUTC) {
+    const year = dateObj.getUTCFullYear();
+    const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  } else {
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+}

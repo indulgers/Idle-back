@@ -2,98 +2,279 @@
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
+<p align="center">基于 NestJS 的微服务架构系统</p>
+<p align="center">
 <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
 <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
 <a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
 </p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+## 项目简介
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+这是一个基于 NestJS 框架构建的现代化微服务系统，采用分布式架构设计，支持高并发、高可用的业务场景。
 
-## Project setup
+## 系统架构
+
+### 微服务组件
+
+- **Gateway (网关服务)** - 端口 3000
+  - API 网关和路由转发
+  - 统一的接口入口
+  - 负载均衡和请求分发
+
+- **Main Service (主服务)** - TCP: 3001, HTTP: 3011
+  - 核心业务逻辑处理
+  - 用户管理和认证
+  - 积分系统管理
+
+- **Content Service (内容服务)** - TCP: 3004, HTTP: 3014
+  - 内容管理和存储
+  - 文件上传和处理
+  - 媒体资源管理
+
+- **Admin Service (管理服务)** - 端口 3002
+  - 后台管理功能
+  - 数据统计和监控
+  - 系统配置管理
+
+### 基础设施
+
+- **Redis** - 缓存和会话存储
+- **ChromaDB** - 向量数据库
+- **MinIO** - 对象存储服务
+- **Prisma** - 数据库 ORM
+
+## 快速开始
+
+### 环境要求
+
+- Node.js 18+
+- pnpm
+- Docker & Docker Compose
+- PM2 (生产环境)
+
+### 本地开发
 
 ```bash
+# 安装依赖
 $ pnpm install
+
+# 启动开发环境
+$ pnpm run start:all
+
+# 或者单独启动服务
+$ pnpm run start:gateway    # 网关服务
+$ pnpm run start:main       # 主服务
+$ pnpm run start:content    # 内容服务
+$ pnpm run start:admin      # 管理服务
 ```
 
-## Compile and run the project
+### Docker 部署
 
 ```bash
-# development
-$ pnpm run start
+# 开发环境
+$ docker-compose up -d
 
-# watch mode
-$ pnpm run start:dev
+# 生产环境
+$ docker-compose -f docker-compose.yml up -d
 
-# production mode
-$ pnpm run start:prod
+# 快速部署脚本
+$ ./deploy.sh
 ```
 
-## Run tests
+### PM2 生产部署
 
 ```bash
-# unit tests
+# 构建项目
+$ pnpm run build
+
+# 启动所有服务
+$ pnpm run pm2:start
+
+# 重启服务
+$ pnpm run pm2:restart
+
+# 查看日志
+$ pnpm run pm2:logs
+```
+
+## 可用脚本
+
+### 开发命令
+
+```bash
+# 启动所有微服务
+$ pnpm run start:all
+
+# 单独启动服务
+$ pnpm run start:gateway
+$ pnpm run start:main
+$ pnpm run start:content
+$ pnpm run start:admin
+
+# 代码格式化
+$ pnpm run format
+
+# 代码检查
+$ pnpm run lint
+```
+
+### 构建命令
+
+```bash
+# 构建所有服务
+$ pnpm run build
+
+# 单独构建
+$ pnpm run build gateway
+$ pnpm run build main
+$ pnpm run build content
+$ pnpm run build admin
+```
+
+### 测试命令
+
+```bash
+# 单元测试
 $ pnpm run test
 
-# e2e tests
-$ pnpm run test:e2e
+# 监听模式测试
+$ pnpm run test:watch
 
-# test coverage
+# 测试覆盖率
 $ pnpm run test:cov
+
+# E2E 测试
+$ pnpm run test:e2e
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### PM2 管理
 
 ```bash
-$ pnpm install -g mau
-$ mau deploy
+# 启动所有服务
+$ pnpm run pm2:start
+
+# 重启所有服务
+$ pnpm run pm2:restart
+
+# 停止所有服务
+$ pnpm run pm2:stop
+
+# 删除所有服务
+$ pnpm run pm2:delete
+
+# 查看日志
+$ pnpm run pm2:logs
+
+# 重启网关
+$ pnpm run pm2:gateway
+
+# 重启微服务
+$ pnpm run pm2:microservices
+
+# 重启管理服务
+$ pnpm run pm2:admin
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 服务端口
 
-## Resources
+| 服务 | TCP端口 | HTTP端口 | 描述 |
+|------|---------|----------|------|
+| Gateway | - | 3000 | API网关 |
+| Main | 3001 | 3011 | 主服务 |
+| Content | 3004 | 3014 | 内容服务 |
+| Admin | - | 3002 | 管理服务 |
+| Redis | - | 6379 | 缓存服务 |
+| MinIO | - | 9000/9001 | 对象存储 |
+| ChromaDB | - | 8000 | 向量数据库 |
 
-Check out a few resources that may come in handy when working with NestJS:
+## API 文档
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+启动服务后，可以访问以下 Swagger 文档：
 
-## Support
+- Gateway API: http://localhost:3000/api/doc
+- Main Service: http://localhost:3011/api/main/doc
+- Content Service: http://localhost:3014/api/content/doc
+- Admin Service: http://localhost:3002/api/admin/doc
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## 部署指南
 
-## Stay in touch
+### 自动化部署
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+使用提供的部署脚本进行一键部署：
 
-## License
+```bash
+# 拉取代码并部署
+$ ./scripts/pull.sh
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+# 完整部署
+$ ./deploy.sh
+```
+
+### 手动部署
+
+1. 克隆代码并安装依赖
+2. 配置环境变量
+3. 执行数据库迁移
+4. 构建项目
+5. 启动服务
+
+### 环境变量配置
+
+创建 `.env` 文件并配置以下变量：
+
+```env
+NODE_ENV=production
+REDIS_URL=redis://localhost:6379
+CHROMA_DB_URL=http://localhost:8000
+MINIO_ENDPOINT=localhost
+MINIO_PORT=9000
+MINIO_ACCESS_KEY=your_access_key
+MINIO_SECRET_KEY=your_secret_key
+```
+
+## 监控和日志
+
+- 日志文件位置: `./logs/`
+- PM2 监控: `pm2 monit`
+- 健康检查: 各服务提供 `/health` 端点
+
+## 技术栈
+
+- **框架**: NestJS
+- **语言**: TypeScript
+- **数据库**: Prisma ORM
+- **缓存**: Redis
+- **消息队列**: TCP 微服务通信
+- **文件存储**: MinIO
+- **向量数据库**: ChromaDB
+- **容器化**: Docker
+- **进程管理**: PM2
+
+## 开发规范
+
+- 使用 TypeScript 进行类型安全开发
+- 遵循 NestJS 最佳实践
+- 微服务间通过 TCP 通信
+- 统一的错误处理和日志记录
+- API 文档自动生成
+
+## 贡献指南
+
+1. Fork 项目
+2. 创建功能分支
+3. 提交代码变更
+4. 推送到分支
+5. 创建 Pull Request
+
+## 许可证
+
+本项目采用 UNLICENSED 许可证。
+
+## 联系方式
+
+如有问题或建议，请通过以下方式联系：
+
+- 创建 Issue
+- 发送邮件
+- 加入讨论群

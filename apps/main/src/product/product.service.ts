@@ -9,6 +9,7 @@ import { guid, ResultData } from '@app/common';
 import { ProductVectorService } from './product-vector.service';
 import { BehaviorService } from '../behavior/behavior.service';
 import { Prisma, VerificationStatus } from '@prisma/client';
+import { buildSearchConditions } from './utils/product-search-mapping';
 
 @Injectable()
 export class ProductService {
@@ -33,28 +34,23 @@ export class ProductService {
     } = query;
 
     try {
+      // 使用映射工具扩展搜索条件
+      const searchConditions = buildSearchConditions(keyword);
+
       // 构建基础查询条件
       const baseWhere: Prisma.ProductWhereInput = {
-        OR: [
-          { name: { contains: keyword } },
-          { description: { contains: keyword } },
-        ],
-        status: 'VERIFIED' as VerificationStatus, // 使用类型断言或直接使用枚举值
-        ...(communityId && { communityId }),
-
-        // 价格筛选
-        ...((minPrice || maxPrice) && {
+        OR: searchConditions,
+        status: 'VERIFIED' as VerificationStatus,
+        ...(query.communityId && { communityId: query.communityId }),
+        // 其他筛选条件保持不变
+        ...((query.minPrice || query.maxPrice) && {
           price: {
-            ...(minPrice && { gte: minPrice }),
-            ...(maxPrice && { lte: maxPrice }),
+            ...(query.minPrice && { gte: query.minPrice }),
+            ...(query.maxPrice && { lte: query.maxPrice }),
           },
         }),
-
-        // 商品成色筛选 - 假设有一个 condition 字段，可能需要根据实际数据库结构调整
-        ...(condition && { condition }),
-
-        // 分类筛选 - 假设有一个 categoryId 字段，可能需要根据实际数据库结构调整
-        ...(categoryId && { categoryId }),
+        ...(query.condition && { condition: query.condition }),
+        ...(query.categoryId && { categoryId: query.categoryId }),
       };
 
       // 构建排序条件
@@ -175,7 +171,6 @@ export class ProductService {
 
   // 修改 create 方法来添加向量索引
   async create(data: CreateProductDto) {
-    const imageUrl = JSON.stringify(data.images || []);
     const product = await this.prisma.product.create({
       data: {
         id: guid(),
@@ -185,7 +180,9 @@ export class ProductService {
         userId: data.userId,
         communityId: data.communityId,
         categoryId: data.categoryId,
-        imageUrl,
+        imageUrl: Array.isArray(data.imageUrl)
+          ? JSON.stringify(data.imageUrl)
+          : data.imageUrl,
         tags: data.tags,
         viewCount: 0,
         purchaseCount: 0,
@@ -259,46 +256,67 @@ export class ProductService {
   }
 
   async findById(id: string, userId?: string) {
-    const product = await this.prisma.product.findUnique({
-      where: { id },
-      include: {
-        comments: {
-          orderBy: { createTime: 'desc' },
-          take: 10, // 默认获取最新的10条评论
-        },
-      },
-    });
-
-    if (!product) {
-      throw new HttpException('物品不存在', HttpStatus.NOT_FOUND);
-    }
-
-    // 增加浏览次数
-    await this.prisma.product.update({
-      where: { id },
-      data: {
-        viewCount: { increment: 1 },
-      },
-    });
-
-    // 如果有登录用户，记录浏览行为
-    if (userId) {
-      this.behaviorService.recordViewBehavior(userId, id).catch((error) => {
-        console.error('记录浏览行为失败:', error);
+    try {
+      const product = await this.prisma.product.findUnique({
+        where: { id },
       });
-    }
 
-    return ResultData.ok(product);
+      if (!product) {
+        throw new HttpException('物品不存在', HttpStatus.NOT_FOUND);
+      }
+
+      // 增加浏览次数
+      await this.prisma.product.update({
+        where: { id },
+        data: {
+          viewCount: {
+            increment: 1,
+          },
+        },
+      });
+
+      // 记录用户浏览行为
+      if (userId) {
+        this.behaviorService.recordViewBehavior(userId, id).catch((error) => {
+          console.error('记录浏览行为失败:', error);
+        });
+      }
+
+      // 为了保持与donation接口一致，将imageUrl重命名为images
+      const result = {
+        ...product,
+        images: product.imageUrl,
+      };
+
+      return ResultData.ok(result);
+    } catch (error) {
+      console.error('查询物品失败:', error);
+      if (error instanceof HttpException) throw error;
+      throw new HttpException('查询物品失败', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   async findAll(query: QueryProductDto) {
     const { page = 1, pageSize = 10, communityId, status, categoryId } = query;
 
+    // 构建基本查询条件
     const where: Prisma.ProductWhereInput = {
-      ...(status ? { status } : { status: { not: 'DELETED' } }), // 使用正确的枚举值
+      ...(status ? { status } : { status: { not: 'DELETED' } }),
       ...(communityId && { communityId }),
       ...(categoryId && { categoryId }),
     };
+
+    const orderedProductIds = await this.prisma.order.findMany({
+      select: {
+        productId: true,
+      },
+      distinct: ['productId'],
+    });
+
+    where.id = {
+      notIn: orderedProductIds.map((item) => item.productId),
+    };
+
     const [total, items] = await Promise.all([
       this.prisma.product.count({ where }),
       this.prisma.product.findMany({
@@ -310,8 +328,14 @@ export class ProductService {
         },
       }),
     ]);
+
+    const mappedItems = items.map((item) => ({
+      ...item,
+      images: item.imageUrl,
+    }));
+
     return ResultData.ok({
-      items,
+      items: mappedItems,
       total,
       page,
       pageSize,
@@ -340,8 +364,14 @@ export class ProductService {
       }),
     ]);
 
+    // 为了保持前端接口一致，将所有结果的imageUrl重命名为images
+    const mappedItems = items.map((item) => ({
+      ...item,
+      images: item.imageUrl,
+    }));
+
     return ResultData.ok({
-      items,
+      items: mappedItems,
       total,
       page,
       pageSize,

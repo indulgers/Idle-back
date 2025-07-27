@@ -109,7 +109,7 @@ export class UserService {
           password: data.password, // 实际项目中应该对密码进行加密
           phone: data.phone,
           communityId: data.communityId,
-          roleId: 'community_admin', // 默认为社区管理员角色
+          roleId: 'communityadmin', // 默认为社区管理员角色
         },
       });
 

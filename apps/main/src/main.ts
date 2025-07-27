@@ -36,7 +36,7 @@ async function bootstrap() {
 
   // 使用MAIN_HTTP_PORT(3011)作为HTTP端口
   const httpPort = parseInt(process.env.MAIN_HTTP_PORT || '3011');
-  await app.listen(httpPort, '0.0.0.0'); // 绑定到所有接口，使Docker中可访问
+  await app.listen(httpPort); // 绑定到所有接口，使Docker中可访问
 
   console.log(
     `Main service TCP is running on port: ${process.env.MAIN_SERVICE_PORT || '3001'}`,

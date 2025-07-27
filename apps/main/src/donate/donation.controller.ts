@@ -23,6 +23,7 @@ import { QueryDonationDto } from './dto/query-donation.dto';
 import { ClaimDonationDto } from './dto/update-donation.dto';
 import { FeedbackDonationDto } from './dto/update-donation.dto';
 import { DonationStatus } from '@prisma/client';
+import { ExchangeDonationDto } from './dto/exchange-donation.dto';
 
 @Controller('donation')
 @ApiTags('donation')
@@ -81,6 +82,15 @@ export class DonationController {
   //   return this.donationService.feedback(userId, feedbackDto);
   // }
 
+  @Post('exchange')
+  @ApiOperation({ summary: '使用积分兑换捐赠物品' })
+  @ApiBody({
+    type: ExchangeDonationDto,
+    description: '兑换捐赠物品所需数据',
+  })
+  exchange(@Body() exchangeDto: ExchangeDonationDto) {
+    return this.donationService.exchange(exchangeDto);
+  }
   @Put(':id/cancel')
   @ApiOperation({ summary: '取消捐赠' })
   @ApiParam({ name: 'id', description: '捐赠ID' })

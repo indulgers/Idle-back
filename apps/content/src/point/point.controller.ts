@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Query, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery, ApiParam } from '@nestjs/swagger';
+import { MessagePattern } from '@nestjs/microservices';
 import { PointService } from './point.service';
 import { CreatePointDto, QueryPointDto } from './dto/point.dto';
 
@@ -38,16 +39,34 @@ export class PointController {
     return this.pointService.validateUserPoints(userId, Number(requiredPoints));
   }
 
-  @Post('transaction')
-  @ApiOperation({ summary: '执行积分交易' })
-  async executePointTransaction(
-    @Body() data: { userId: string; amount: number; description?: string },
-  ) {
-    const { userId, amount, description } = data;
+  // @Post('transaction')
+  // @ApiOperation({ summary: '执行积分交易' })
+  // async executePointTransaction(
+  //   @Body() data: { userId: string; amount: number; description?: string },
+  // ) {
+  //   const { userId, amount, description } = data;
+  //   return this.pointService.executePointTransaction(
+  //     userId,
+  //     amount,
+  //     description,
+  //   );
+  // }
+
+  @MessagePattern('get_user_points')
+  getUserPoints(data: { userId: string }) {
+    return this.pointService.getUserTotalPoints(data.userId);
+  }
+
+  @MessagePattern('execute_point_transaction')
+  executePointTransaction(data: {
+    userId: string;
+    amount: number;
+    description?: string;
+  }) {
     return this.pointService.executePointTransaction(
-      userId,
-      amount,
-      description,
+      data.userId,
+      data.amount,
+      data.description,
     );
   }
 }

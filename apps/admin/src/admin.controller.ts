@@ -1,8 +1,21 @@
-import { Controller, Get, Param, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  UseGuards,
+  Req,
+  Put,
+} from '@nestjs/common';
 import { Roles } from '../../common/decorator/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
-import { Role } from '@prisma/client';
+import { Role, VerificationStatus } from '@prisma/client';
 import { Request } from 'express';
+import { AdminService } from './admin.service';
+import { ApiTags, ApiOperation, ApiParam, ApiBody } from '@nestjs/swagger';
+import { VerifyAdminDto } from './admin/dto/verify-admin.dto';
+
 declare module 'express' {
   interface Request {
     user: {
@@ -13,9 +26,13 @@ declare module 'express' {
     };
   }
 }
+
 @Controller('')
+@ApiTags('admin')
 // @UseGuards(RolesGuard)
 export class AdminController {
+  constructor(private readonly adminService: AdminService) {}
+
   // 示例：查询社区数据，要求社区管理员或者超级管理员
   // @Get('community/:communityId')
   // @Roles('community_admin')
@@ -40,8 +57,60 @@ export class AdminController {
   // 示例：超级管理员接口，管理所有社区的数据
   @Get('all')
   // @Roles('super_admin')
+  @ApiOperation({ summary: '获取所有社区数据' })
   async getAllCommunityData() {
     // 仅超级管理员才能访问
     return { data: '所有社区的数据' };
+  }
+
+  /**
+   * 获取待审核的管理员列表
+   */
+  @Get('pending')
+  // @Roles('super_admin')
+  @ApiOperation({ summary: '获取待审核的管理员列表' })
+  async getPendingAdmins() {
+    return this.adminService.getPendingAdmins();
+  }
+
+  /**
+   * 审核管理员
+   */
+  @Put('verify/:id')
+  @ApiOperation({ summary: '审核管理员' })
+  @ApiParam({ name: 'id', description: '管理员ID' })
+  @ApiBody({ type: VerifyAdminDto })
+  async verifyAdmin(
+    @Param('id') id: string,
+    @Body() verifyAdminDto: VerifyAdminDto,
+  ) {
+    // 映射外部状态名称到实际的枚举值
+    const statusMap = {
+      APPROVED: VerificationStatus.VERIFIED,
+      REJECTED: VerificationStatus.REJECTED,
+    };
+
+    // 使用映射后的状态或原始状态
+    const status = statusMap[verifyAdminDto.status] || verifyAdminDto.status;
+
+    // 临时使用固定的超级管理员ID
+    const verifierId = 'superadmin';
+
+    return this.adminService.verifyAdmin(
+      id,
+      status,
+      verifyAdminDto.verifyNote || '',
+      verifierId,
+    );
+  }
+
+  /**
+   * 获取所有管理员列表
+   */
+  @Get('list')
+  // @Roles('super_admin')
+  @ApiOperation({ summary: '获取所有管理员列表' })
+  async getAllAdmins() {
+    return this.adminService.getAllAdmins();
   }
 }

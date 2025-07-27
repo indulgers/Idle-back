@@ -88,6 +88,7 @@ export class ChatService {
 
   // 获取聊天室列表
   async getRooms(userId: string) {
+    // 获取基本聊天室列表
     const rooms = await this.prisma.chat.findMany({
       where: {
         OR: [{ buyerId: userId }, { sellerId: userId }],
@@ -101,7 +102,77 @@ export class ChatService {
       orderBy: { updateTime: 'desc' },
     });
 
-    return ResultData.ok(rooms);
+    // 增强聊天室数据，添加用户信息和产品信息
+    const enhancedRooms = await Promise.all(
+      rooms.map(async (room) => {
+        // 确定是买家还是卖家视角，获取对方ID
+        const isUserBuyer = room.buyerId === userId;
+        const otherUserId = isUserBuyer ? room.sellerId : room.buyerId;
+
+        // 获取对方用户信息
+        const otherUser = await this.prisma.user.findUnique({
+          where: { id: otherUserId },
+          select: {
+            id: true,
+            nickname: true,
+            avatar: true,
+          },
+        });
+
+        // 查找该聊天室中的产品类型消息
+        const productMessage = await this.prisma.message.findFirst({
+          where: {
+            chatId: room.id,
+            type: 'PRODUCT',
+          },
+          orderBy: { createTime: 'desc' },
+        });
+
+        let productInfo = null;
+        if (productMessage) {
+          // 提取产品ID (假设产品消息的content字段是JSON格式，包含productId)
+          try {
+            const productData = JSON.parse(productMessage.content);
+            if (productData.productId) {
+              // 获取产品信息
+              const product = await this.prisma.product.findUnique({
+                where: { id: productData.productId },
+              });
+              if (product) {
+                productInfo = {
+                  id: product.id,
+                  name: product.name,
+                  price: product.price,
+                  images: JSON.parse(product.imageUrl || '[]'),
+                };
+              }
+            }
+          } catch (e) {
+            console.error('解析产品消息失败:', e);
+          }
+        }
+
+        // 标记未读消息数
+        const unreadCount = await this.prisma.message.count({
+          where: {
+            chatId: room.id,
+            senderId: { not: userId },
+            read: false,
+          },
+        });
+
+        // 返回增强的聊天室数据
+        return {
+          ...room,
+          otherUser,
+          productInfo,
+          unreadCount,
+          lastMessage: room.messages[0] || null,
+        };
+      }),
+    );
+
+    return ResultData.ok(enhancedRooms);
   }
 
   // 获取聊天记录
@@ -109,16 +180,23 @@ export class ChatService {
     const room = await this.prisma.chat.findUnique({
       where: { id: roomId },
     });
-
+    console.log('room', room);
     if (!room) {
       throw new HttpException('聊天室不存在', HttpStatus.NOT_FOUND);
     }
-
+    console.log('room', room);
     const messages = await this.prisma.message.findMany({
       where: { chatId: roomId },
       orderBy: { createTime: 'asc' },
     });
-    console.log('messages', messages);
+    console.log(
+      'messages',
+      await this.prisma.message.findMany({
+        where: { chatId: 'cm8srd6tf00016tfo7cvp1c0v' },
+        orderBy: { createTime: 'asc' },
+      }),
+    );
+
     // 标记消息为已读
     await this.prisma.message.updateMany({
       where: {

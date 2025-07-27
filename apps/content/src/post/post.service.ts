@@ -2,7 +2,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '@app/prisma';
 import { PostVectorService } from './post-vector.service';
 import { CreatePostDto, UpdatePostDto, QueryPostDto } from './dto/post.dto';
-import { guid, ResultData } from '@app/common';
+import { formatDate, guid, ResultData } from '@app/common';
 
 @Injectable()
 export class PostService {
@@ -283,6 +283,12 @@ export class PostService {
       throw new HttpException('帖子不存在', HttpStatus.NOT_FOUND);
     }
 
+    // 查询作者信息
+    const author = await this.prisma.user.findUnique({
+      where: { id: post.userId },
+      select: { id: true, nickname: true, username: true, avatar: true },
+    });
+
     // 如果提供了用户ID，则查询用户是否点赞和收藏
     let isLiked = false;
     let isFavorited = false;
@@ -303,6 +309,12 @@ export class PostService {
       );
     }
 
+    // 准备作者信息
+    const authorInfo = author || {
+      nickname: `用户${post.userId.substring(0, 6)}`,
+      avatar: 'https://img.yzcdn.cn/vant/cat.jpeg',
+    };
+
     // 增强帖子数据，添加行为统计和用户行为标识
     return ResultData.ok({
       ...post,
@@ -313,6 +325,11 @@ export class PostService {
       commentCount: post._count.comments,
       isLiked,
       isFavorited,
+      // 添加作者信息
+      author: authorInfo.nickname || `用户${post.userId.substring(0, 6)}`,
+      avatarUrl: authorInfo.avatar || 'https://img.yzcdn.cn/vant/cat.jpeg',
+      updateTime: formatDate(post.updateTime),
+      createTime: formatDate(post.createTime),
     });
   }
 
@@ -421,6 +438,26 @@ export class PostService {
         .filter(Boolean);
     }
 
+    // 新增代码：收集所有帖子的用户ID并查询用户信息
+    const userIds = [...new Set(finalItems.map((post) => post.userId))];
+    const users = await this.prisma.user.findMany({
+      where: {
+        id: { in: userIds },
+      },
+      select: {
+        id: true,
+        nickname: true,
+        username: true,
+        avatar: true,
+      },
+    });
+
+    // 创建用户ID到用户信息的映射
+    const userMap = new Map();
+    users.forEach((user) => {
+      userMap.set(user.id, user);
+    });
+
     // 如果提供了用户ID，查询用户行为
     let userLikes = new Set();
     let userFavorites = new Set();
@@ -450,20 +487,32 @@ export class PostService {
       userFavorites = new Set(favorites.map((favorite) => favorite.postId));
     }
 
-    // 增强帖子数据
-    const posts = finalItems.map((post) => ({
-      ...post,
-      images: JSON.parse(post.images || '[]'),
-      commentCount: post._count.comments,
-      isLiked: userId ? userLikes.has(post.id) : false,
-      isFavorited: userId ? userFavorites.has(post.id) : false,
-      // 为前端添加额外信息
-      topic: post.topic || '未分类',
-      author: `用户${post.userId.substring(0, 6)}`, // 简化展示，实际应查询用户信息
-      avatarUrl: 'https://img.yzcdn.cn/vant/cat.jpeg', // 默认头像
-      location: '附近', // 默认位置
-      shares: Math.floor(Math.random() * 20), // 模拟分享数，实际应有专门字段
-    }));
+    // 修改增强帖子数据部分
+    const posts = finalItems.map((post) => {
+      // 获取用户信息，如果找不到则使用默认值
+      const userInfo = userMap.get(post.userId) || {
+        nickname: `用户${post.userId.substring(0, 6)}`,
+        avatar: 'https://img.yzcdn.cn/vant/cat.jpeg',
+      };
+
+      return {
+        ...post,
+        images: JSON.parse(post.images || '[]'),
+        commentCount: post._count.comments,
+        isLiked: userId ? userLikes.has(post.id) : false,
+        isFavorited: userId ? userFavorites.has(post.id) : false,
+        // 使用真实用户信息
+        author:
+          userInfo.nickname ||
+          userInfo.username ||
+          `用户${post.userId.substring(0, 6)}`,
+        avatarUrl: userInfo.avatar || 'https://img.yzcdn.cn/vant/cat.jpeg',
+        location: '附近', // 默认位置
+        shares: Math.floor(Math.random() * 20), // 模拟分享数，实际应有专门字段
+        updateTime: formatDate(post.updateTime),
+        createTime: formatDate(post.createTime),
+      };
+    });
 
     return ResultData.ok({
       items: posts,
@@ -476,7 +525,7 @@ export class PostService {
   // 添加记录搜索行为的方法
   private async recordSearchBehavior(keyword: string, resultIds: string[]) {
     // TODO: 实现搜索行为记录，可用于个性化推荐
-    console.log(`记录搜索行为: ${keyword}, 结果数: ${resultIds.length}`);
+
     return true;
   }
 
@@ -495,13 +544,45 @@ export class PostService {
         orderBy: {
           createTime: 'desc',
         },
+        include: {
+          _count: {
+            select: { comments: true },
+          },
+        },
       }),
     ]);
 
-    const posts = items.map((post) => ({
-      ...post,
-      images: JSON.parse(post.images || '[]'),
-    }));
+    // 查询用户信息
+    const postUserIds = [...new Set(items.map((post) => post.userId))];
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: postUserIds } },
+      select: { id: true, nickname: true, username: true, avatar: true },
+    });
+
+    const userMap = new Map();
+    users.forEach((user) => userMap.set(user.id, user));
+
+    const posts = items.map((post) => {
+      // 获取用户信息，如果找不到则使用默认值
+      const userInfo = userMap.get(post.userId) || {
+        nickname: `用户${post.userId.substring(0, 6)}`,
+        avatar: 'https://img.yzcdn.cn/vant/cat.jpeg',
+      };
+
+      return {
+        ...post,
+        images: JSON.parse(post.images || '[]'),
+        commentCount: post._count?.comments || 0,
+        // 使用真实用户信息
+        author:
+          userInfo.nickname ||
+          userInfo.username ||
+          `用户${post.userId.substring(0, 6)}`,
+        avatarUrl: userInfo.avatar || 'https://img.yzcdn.cn/vant/cat.jpeg',
+        updateTime: formatDate(post.updateTime),
+        createTime: formatDate(post.createTime),
+      };
+    });
 
     return ResultData.ok({
       items: posts,

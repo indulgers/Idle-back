@@ -32,19 +32,26 @@ model User {
 }
 
 model Admin {
-  id          String    @id @default(cuid())
-  username    String    @db.VarChar(50)
-  password    String    @db.VarChar(255)
-  roleId      String    @default("admin") @db.VarChar(50)
-  createTime  DateTime  @default(now())
-  updateTime  DateTime  @updatedAt
-  communityId String
-  phone       String    @default("") @db.VarChar(50)
-  role        Role      @relation(fields: [roleId], references: [id])
-  Community   Community @relation(fields: [communityId], references: [id])
+  id             String             @id @default(cuid())
+  username       String             @db.VarChar(50)
+  password       String             @db.VarChar(255)
+  roleId         String             @default("admin") @db.VarChar(50)
+  createTime     DateTime           @default(now())
+  updateTime     DateTime           @updatedAt
+  communityId    String
+  phone          String             @default("") @db.VarChar(50)
+  status         VerificationStatus @default(PENDING)
+  verifyTime     DateTime?
+  verifyNote     String?
+  verifiedBy     String?
+  role           Role               @relation(fields: [roleId], references: [id])
+  Community      Community          @relation(fields: [communityId], references: [id])
+  verifier       Admin?             @relation("AdminVerification", fields: [verifiedBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  verifiedAdmins Admin[]            @relation("AdminVerification")
 
   @@index([communityId])
   @@index([roleId])
+  @@index([verifiedBy])
 }
 
 model Role {
@@ -264,19 +271,42 @@ model Chat {
 }
 
 model Comment {
-  id         String   @id @default(cuid())
-  content    String   @db.Text
-  userId     String   @db.VarChar(50)
-  createTime DateTime @default(now())
-  updateTime DateTime @updatedAt
+  id         String         @id @default(cuid())
+  content    String         @db.Text
+  userId     String         @db.VarChar(50)
+  createTime DateTime       @default(now())
+  updateTime DateTime       @updatedAt
   productId  String?
   postId     String?
-  product    Product? @relation(fields: [productId], references: [id])
-  post       Post?    @relation(fields: [postId], references: [id])
+  product    Product?       @relation(fields: [productId], references: [id])
+  post       Post?          @relation(fields: [postId], references: [id])
+  replies    ReplyComment[] @relation("OriginalComment")
+  repliesTo  ReplyComment[] @relation("ReplyToComment")
 
   @@index([productId])
   @@index([postId])
   @@index([userId])
+}
+
+model ReplyComment {
+  id            String   @id @default(cuid())
+  content       String   @db.Text
+  userId        String   @db.VarChar(50)
+  commentId     String // 原始评论ID
+  replyToId     String // 回复的评论ID（可能是原始评论或另一条回复）
+  replyToUserId String // 被回复用户ID
+  createTime    DateTime @default(now())
+  updateTime    DateTime @updatedAt
+
+  // 关联原始评论
+  originalComment Comment @relation("OriginalComment", fields: [commentId], references: [id], onDelete: Cascade)
+  // 关联回复的评论
+  replyToComment  Comment @relation("ReplyToComment", fields: [replyToId], references: [id], onDelete: Cascade)
+
+  @@index([commentId])
+  @@index([replyToId])
+  @@index([userId])
+  @@index([replyToUserId])
 }
 
 model Message {

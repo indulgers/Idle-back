@@ -20,6 +20,7 @@ import {
 } from '@nestjs/swagger';
 import { ResultData } from '@app/common';
 import { DonationStatus } from '@prisma/client';
+import { AssignPointsDto } from './dto/assign-points.dto';
 
 @Controller('donation')
 @ApiTags('donation')
@@ -249,5 +250,15 @@ export class DonateController {
   })
   remove(@Param('id') id: string) {
     return this.donateService.remove(id);
+  }
+
+  @Post('assign-points')
+  @ApiOperation({ summary: '分配积分' })
+  @ApiBody({
+    type: AssignPointsDto,
+    description: '分配积分所需数据',
+  })
+  assignPoints(@Body() dto: AssignPointsDto) {
+    return this.donateService.assignPoints(dto);
   }
 }

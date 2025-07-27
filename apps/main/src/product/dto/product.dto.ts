@@ -60,7 +60,7 @@ export class CreateProductDto {
   })
   @IsString({ each: true })
   @IsNotEmpty()
-  images: string[]; // 将imageUrl改为images数组
+  imageUrl: string; // 将imageUrl改为images数组
 
   @ApiProperty({ description: '纬度', required: false })
   @IsOptional()

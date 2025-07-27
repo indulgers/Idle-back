@@ -14,8 +14,8 @@ import { MinioService } from './minio.service';
           endPoint: 'indulger.cn',
           port: 9000,
           useSSL: false,
-          accessKey: 's2bOHbhDKZYmTpMUKMTy',
-          secretKey: 'lAm5XHxYUi2NDsV8c0uBvdUb1vbGnGEFERdD33tA',
+          accessKey: 'LWS8NjPNto2yeNVlZOjP',
+          secretKey: 'S0ymbLzS7gXoCVEHNANhulhLxv3KeyFOYOtHWzvZ',
         });
         return client;
       },

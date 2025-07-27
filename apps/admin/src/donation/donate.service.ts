@@ -238,4 +238,41 @@ export class DonateService {
 
     return ResultData.ok(await this.prisma.donation.delete({ where: { id } }));
   }
+
+  // 分配积分
+  async assignPoints(dto: any) {
+    try {
+      const donation = await this.prisma.donation.findUnique({
+        where: { id: dto.donationId },
+      });
+
+      if (!donation) {
+        throw new HttpException('捐赠不存在', HttpStatus.NOT_FOUND);
+      }
+
+      // 只能给待审核的捐赠分配积分
+      if (donation.status !== DonationStatus.PENDING) {
+        throw new HttpException(
+          '只能给待审核的捐赠分配积分',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // 更新捐赠积分值
+      const updated = await this.prisma.donation.update({
+        where: { id: dto.donationId },
+        data: {
+          pointValue: dto.pointValue,
+          verifyNote: dto.note,
+          updateTime: new Date(),
+        },
+      });
+
+      return ResultData.ok(updated);
+    } catch (error) {
+      console.error('分配积分失败:', error);
+      if (error instanceof HttpException) throw error;
+      throw new HttpException('分配积分失败', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }
