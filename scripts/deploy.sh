@@ -2,7 +2,7 @@
 
 # 部署配置
 SERVER_USER="ubuntu"
-SERVER_HOST="106.53.179.23"
+SERVER_HOST=""
 SERVER_PORT=22
 PROJECT_DIR="/home/ubuntu/server/Idle-back"
 REPO_URL="git@github.com:indulgers/Idle-back.git"
